@@ -18,26 +18,36 @@ buffer_reader *buffer_reader_open(char *path)
 
 bool buffer_reader_acquire(buffer_reader *reader)
 {
-    buffer *nextBuffer = NULL;
-    if (NULL == reader->currentBuffer)
+    char *data = (char *)malloc(sizeof(char) * BUFFER_SIZE);
+    size_t readData = fread(data, sizeof(char), BUFFER_SIZE, reader->handler);
+    if (readData)
     {
-        nextBuffer = reader->currentBuffer = (buffer *)malloc(sizeof(buffer));
+        buffer *nextBuffer = NULL;
+        if (NULL == reader->currentBuffer)
+        {
+            nextBuffer = reader->currentBuffer = (buffer *)malloc(sizeof(buffer));
+        }
+        else
+        {
+            buffer *currBuffer = reader->currentBuffer;
+            while (NULL != currBuffer->nextBuffer)
+            {
+                currBuffer = currBuffer->nextBuffer;
+            }
+            nextBuffer = currBuffer->nextBuffer = (buffer *)malloc(sizeof(buffer));
+        }
+
+        nextBuffer->contents = data;
+        nextBuffer->checkpoint = 0;
+        nextBuffer->nextBuffer = NULL;
+        nextBuffer->length = readData;
+        return true;
     }
     else
     {
-        buffer *currBuffer = reader->currentBuffer;
-        while (NULL != currBuffer->nextBuffer)
-        {
-            currBuffer = currBuffer->nextBuffer;
-        }
-        nextBuffer = currBuffer->nextBuffer = (buffer *)malloc(sizeof(buffer));
+        free(data);
+        return false;
     }
-
-    nextBuffer->contents = (char *)malloc(sizeof(char) * BUFFER_SIZE);
-    nextBuffer->checkpoint = 0;
-    nextBuffer->nextBuffer = NULL;
-    nextBuffer->length = fread(nextBuffer->contents, sizeof(char), BUFFER_SIZE, reader->handler);
-    return nextBuffer->length > 0;
 }
 
 void buffer_release(buffer *buffer)
@@ -81,12 +91,31 @@ bool buffer_reader_has_data(buffer_reader *reader)
            (reader->currentBuffer->checkpoint < reader->currentBuffer->length || buffer_reader_proceed(reader));
 }
 
+size_t buffer_reader_available(buffer_reader *reader)
+{
+    size_t available = 0;
+    buffer *curr = reader->currentBuffer;
+    while (curr)
+    {
+        available += curr->length - curr->checkpoint;
+        curr = curr->nextBuffer;
+    }
+    return available;
+}
+
 char buffer_reader_current_char(buffer_reader *reader, size_t offset)
 {
     buffer *buffer = reader->currentBuffer;
     while (buffer->checkpoint + offset >= buffer->length)
     {
         offset -= buffer->length - buffer->checkpoint;
+        if (!buffer->nextBuffer)
+        {
+            if (!buffer_reader_acquire(reader))
+            {
+                return EOF;
+            }
+        }
         buffer = buffer->nextBuffer;
     }
     return buffer->contents[buffer->checkpoint + offset];
@@ -95,7 +124,7 @@ char buffer_reader_current_char(buffer_reader *reader, size_t offset)
 void buffer_reader_commit(buffer_reader *reader, size_t offset)
 {
     buffer *buffer = reader->currentBuffer;
-    while (buffer->checkpoint + offset >= buffer->length)
+    while (buffer->checkpoint + offset > buffer->length)
     {
         offset -= buffer->length - buffer->checkpoint;
         buffer->checkpoint = buffer->length;

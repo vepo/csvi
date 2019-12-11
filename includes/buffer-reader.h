@@ -32,4 +32,6 @@ void buffer_reader_release(buffer_reader *reader);
 
 bool buffer_reader_has_data(buffer_reader *reader);
 
+size_t buffer_reader_available(buffer_reader *reader);
+
 #endif

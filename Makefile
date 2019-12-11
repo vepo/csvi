@@ -1,5 +1,11 @@
+ifeq ($(DEBUG), 1)
+    CFLAGS=-ggdb
+else
+    CFLAGS=
+endif
+
 CC=gcc
-CFLAGS=-std=c99
+CFLAGS:=$(CFLAGS) -std=c99
 LDFLAGS=
 
 BUILDDIR=build
