@@ -16,6 +16,7 @@ typedef struct buffer_reader
 {
     void *handler;
     buffer *currentBuffer;
+    bool endReached;
 } buffer_reader;
 
 buffer_reader *buffer_reader_open(char *path);
