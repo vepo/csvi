@@ -5,8 +5,8 @@ else
 endif
 
 CC=gcc
-CFLAGS:=$(CFLAGS) -std=c99
-LDFLAGS=
+CFLAGS:=$(CFLAGS) -std=c99 -lpdcurses
+LDFLAGS=-lncurses
 
 BUILDDIR=build
 SOURCEDIR=src

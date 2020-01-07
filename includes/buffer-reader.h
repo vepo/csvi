@@ -27,7 +27,7 @@ char buffer_reader_current_char(buffer_reader *reader, size_t offset);
 
 void buffer_reader_commit(buffer_reader *reader, size_t offset);
 
-void buffer_reader_current_copy(buffer_reader *reader, size_t start, size_t end, char *dest);
+void buffer_reader_current_copy(buffer_reader *reader, size_t size, char *dest);
 
 void buffer_reader_release(buffer_reader *reader);
 

@@ -5,7 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 128
+#define BUFFER_SIZE 1024
+
+#define DEBUG()                                  \
+    printf("EXEC: %s %d\n", __FILE__, __LINE__); \
+    fflush(stdout)
 
 buffer_reader *buffer_reader_open(char *path)
 {
@@ -21,10 +25,13 @@ bool buffer_reader_acquire(buffer_reader *reader)
 {
     if (!reader->endReached)
     {
+        DEBUG();
         char *data = (char *)malloc(sizeof(char) * BUFFER_SIZE);
         size_t readData = fread(data, sizeof(char), BUFFER_SIZE, reader->handler);
+        DEBUG();
         if (readData)
         {
+            DEBUG();
             buffer *nextBuffer = NULL;
             if (!reader->currentBuffer)
             {
@@ -43,14 +50,18 @@ bool buffer_reader_acquire(buffer_reader *reader)
             nextBuffer->checkpoint = 0;
             nextBuffer->nextBuffer = NULL;
             nextBuffer->length = readData;
+            DEBUG();
             return true;
         }
         else
         {
+            DEBUG();
             free(data);
             reader->endReached = true;
+            DEBUG();
         }
     }
+    DEBUG();
     return false;
 }
 
@@ -61,6 +72,7 @@ void buffer_release(buffer *buffer)
         if (buffer->contents)
         {
             free(buffer->contents);
+            buffer->contents = NULL;
         }
         free(buffer);
     }
@@ -72,7 +84,7 @@ void buffer_reader_release(buffer_reader *reader)
     buffer *buffer = reader->currentBuffer;
     while (buffer)
     {
-        nextBuffer = buffer->nextBuffer;
+        reader->currentBuffer = nextBuffer = buffer->nextBuffer;
         buffer_release(buffer);
         buffer = nextBuffer;
     }
@@ -84,8 +96,10 @@ void buffer_reader_release(buffer_reader *reader)
 
 bool buffer_reader_proceed(buffer_reader *reader)
 {
-    if (reader->currentBuffer->checkpoint == reader->currentBuffer->length)
+    DEBUG();
+    while (reader->currentBuffer && reader->currentBuffer->checkpoint == reader->currentBuffer->length)
     {
+        DEBUG();
         buffer *next = reader->currentBuffer->nextBuffer;
         buffer_release(reader->currentBuffer);
         if (next)
@@ -94,41 +108,48 @@ bool buffer_reader_proceed(buffer_reader *reader)
         }
         else
         {
+            DEBUG();
             reader->currentBuffer = NULL;
             buffer_reader_acquire(reader);
+            DEBUG();
         }
     }
+    DEBUG();
     return buffer_reader_available(reader) > 0;
 }
 
 bool buffer_reader_has_data(buffer_reader *reader)
 {
-    return (NULL != reader->currentBuffer || buffer_reader_acquire(reader)) &&
+    DEBUG();
+    return (reader->currentBuffer || buffer_reader_acquire(reader)) &&
            (reader->currentBuffer->checkpoint < reader->currentBuffer->length || buffer_reader_proceed(reader));
 }
 
 size_t buffer_reader_available(buffer_reader *reader)
 {
+    DEBUG();
     size_t available = 0;
     buffer *curr = reader->currentBuffer;
     while (curr)
     {
         available += curr->length - curr->checkpoint;
-        if (!curr->nextBuffer)
+        if (!curr->nextBuffer && !reader->endReached)
         {
             buffer_reader_acquire(reader);
         }
         curr = curr->nextBuffer;
     }
+    DEBUG();
     return available;
 }
 
 char buffer_reader_current_char(buffer_reader *reader, size_t offset)
 {
+    size_t remaingOffset = offset;
     buffer *buffer = reader->currentBuffer;
-    while (buffer->checkpoint + offset >= buffer->length)
+    while (buffer->checkpoint + remaingOffset >= buffer->length)
     {
-        offset -= buffer->length - buffer->checkpoint;
+        remaingOffset -= buffer->length - buffer->checkpoint;
         if (!buffer->nextBuffer)
         {
             buffer_reader_acquire(reader);
@@ -139,15 +160,16 @@ char buffer_reader_current_char(buffer_reader *reader, size_t offset)
         }
         buffer = buffer->nextBuffer;
     }
-    return buffer->contents[buffer->checkpoint + offset];
+    return buffer->contents[buffer->checkpoint + remaingOffset];
 }
 
 void buffer_reader_commit(buffer_reader *reader, size_t offset)
 {
+    size_t remaingOffset = offset;
     buffer *buffer = reader->currentBuffer;
-    while (buffer && buffer->checkpoint + offset > buffer->length)
+    while (buffer && buffer->checkpoint + remaingOffset > buffer->length)
     {
-        offset -= buffer->length - buffer->checkpoint;
+        remaingOffset -= buffer->length - buffer->checkpoint;
         buffer->checkpoint = buffer->length;
         if (buffer->nextBuffer)
         {
@@ -161,25 +183,25 @@ void buffer_reader_commit(buffer_reader *reader, size_t offset)
     }
     if (buffer)
     {
-        buffer->checkpoint += offset;
+        buffer->checkpoint += remaingOffset;
         buffer_reader_proceed(reader);
     }
 }
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-void buffer_reader_current_copy(buffer_reader *reader, size_t start, size_t end, char *dest)
+void buffer_reader_current_copy(buffer_reader *reader, size_t size, char *dest)
 {
     buffer *buffer = reader->currentBuffer;
-    if (buffer->checkpoint + end < buffer->length)
+    if (buffer->checkpoint + size < buffer->length)
     {
-        memcpy(dest, &(buffer->contents[buffer->checkpoint + start]), end - start);
+        memcpy(dest, &(buffer->contents[buffer->checkpoint]), size);
     }
     else
     {
-        dest[end - start - 1] = '\0';
-        size_t remaining = end - start - (buffer->length - buffer->checkpoint);
-        memcpy(dest, &(buffer->contents[buffer->checkpoint + start]), buffer->length - buffer->checkpoint - start);
+        dest[size - 1] = '\0';
+        size_t remaining = size - (buffer->length - buffer->checkpoint);
+        memcpy(dest, &(buffer->contents[buffer->checkpoint]), buffer->length - buffer->checkpoint);
         char *currDest = &(dest[buffer->length - buffer->checkpoint]);
         while (remaining > 0)
         {
@@ -189,7 +211,6 @@ void buffer_reader_current_copy(buffer_reader *reader, size_t start, size_t end,
                 buffer = buffer->nextBuffer;
                 if (!buffer)
                 {
-                    end -= remaining;
                     remaining = 0;
                     continue;
                 }
@@ -205,5 +226,5 @@ void buffer_reader_current_copy(buffer_reader *reader, size_t start, size_t end,
             remaining -= currLength;
         }
     }
-    dest[end - start - 1] = '\0';
+    dest[size - 1] = '\0';
 }
