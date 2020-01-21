@@ -39,3 +39,4 @@ stamp-h1
 *.gcno
 *.gcda
 
+src/bin/csvviewer
