@@ -6,10 +6,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#define DEBUG()                                  \
-    printf("EXEC: %s %d\n", __FILE__, __LINE__); \
-    fflush(stdout)
-
 csv_contents *csv_reader_read_file(char *path)
 {
     csv_contents *contents = (csv_contents *)malloc(sizeof(csv_contents));
@@ -23,30 +19,23 @@ csv_contents *csv_reader_read_file(char *path)
     bool is_escaped = false;
     while (buffer_reader_acquire(reader))
     {
-        DEBUG();
         while (buffer_reader_has_data(reader))
         {
-            DEBUG();
             if (!current_token)
             {
                 current_token = (csv_token *)malloc(sizeof(csv_token));
                 contents->first = current_token;
             }
-            DEBUG();
             while (buffer_reader_available(reader) > 0 && isspace(buffer_reader_current_char(reader, 0)))
             {
                 buffer_reader_commit(reader, 1);
             }
-            DEBUG();
             is_escaped = buffer_reader_current_char(reader, 0) == '"';
             if (is_escaped)
             {
-                printf("Escaped...\n");
-                fflush(stdout);
                 size_t token_end = 2;
                 size_t scaped_counter = 0;
                 bool in_scaped_char = false;
-                DEBUG();
                 while (buffer_reader_available(reader) > token_end + 1 && !in_scaped_char && buffer_reader_current_char(reader, token_end) != '"')
                 {
                     ++token_end;
@@ -60,12 +49,9 @@ csv_contents *csv_reader_read_file(char *path)
                         in_scaped_char = false;
                     }
                 }
-                DEBUG();
                 while (buffer_reader_available(reader) > token_end + 2 && !(buffer_reader_current_char(reader, token_end) == '"' && buffer_reader_current_char(reader, token_end + 1) != '"'))
                 {
-                    DEBUG();
                     ++token_end;
-                    DEBUG();
                 };
                 char *token = (char *)malloc(sizeof(char) * (token_end - 1 - scaped_counter));
                 in_scaped_char = false;
@@ -84,64 +70,41 @@ csv_contents *csv_reader_read_file(char *path)
                     }
                 }
                 token[token_end - scaped_counter] = '\0';
-                printf("Token: %s\n", token);
-                fflush(stdout);
                 current_token->data = token;
                 current_token->next = (csv_token *)malloc(sizeof(csv_token));
                 current_token = current_token->next;
                 token_end++;
                 while (buffer_reader_available(reader) > token_end && isspace(buffer_reader_current_char(reader, token_end)))
                 {
-                    DEBUG();
                     ++token_end;
-                    DEBUG();
                 };
                 while (buffer_reader_available(reader) > token_end && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
                 {
-                    DEBUG();
                     ++token_end;
-                    DEBUG();
                 };
                 buffer_reader_commit(reader, token_end + 1);
             }
             else
             {
-                printf("Plain...\n");
-                fflush(stdout);
                 size_t token_end = 0;
                 while ((buffer_reader_available(reader) > token_end || !reader->endReached) && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
                 {
                     ++token_end;
                 };
-                DEBUG();
-                printf("SIZE: %d\n", token_end + 1);
-                fflush(stdout);
-                DEBUG();
                 char *token = (char *)malloc(sizeof(char) * token_end + 1);
-                DEBUG();
                 buffer_reader_current_copy(reader, token_end + 1, token);
-                DEBUG();
-                printf("Token: %s\n", token);
-                fflush(stdout);
-                DEBUG();
                 current_token->data = token;
-                DEBUG();
                 current_token->next = (csv_token *)malloc(sizeof(csv_token));
-                DEBUG();
                 current_token = current_token->next;
-                DEBUG();
                 buffer_reader_commit(reader, token_end + 1);
-                DEBUG();
             }
         }
     }
-    DEBUG();
     if (current_token->next)
     {
         free(current_token->next);
         current_token->next = NULL;
     }
     buffer_reader_release(reader);
-    printf("file read!\n");
     return contents;
 }

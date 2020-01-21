@@ -7,10 +7,6 @@
 
 #define BUFFER_SIZE 1024
 
-#define DEBUG()                                  \
-    printf("EXEC: %s %d\n", __FILE__, __LINE__); \
-    fflush(stdout)
-
 buffer_reader *buffer_reader_open(char *path)
 {
     buffer_reader *reader = (buffer_reader *)malloc(sizeof(buffer_reader));
@@ -25,13 +21,10 @@ bool buffer_reader_acquire(buffer_reader *reader)
 {
     if (!reader->endReached)
     {
-        DEBUG();
         char *data = (char *)malloc(sizeof(char) * BUFFER_SIZE);
         size_t readData = fread(data, sizeof(char), BUFFER_SIZE, reader->handler);
-        DEBUG();
         if (readData)
         {
-            DEBUG();
             buffer *nextBuffer = NULL;
             if (!reader->currentBuffer)
             {
@@ -50,18 +43,14 @@ bool buffer_reader_acquire(buffer_reader *reader)
             nextBuffer->checkpoint = 0;
             nextBuffer->nextBuffer = NULL;
             nextBuffer->length = readData;
-            DEBUG();
             return true;
         }
         else
         {
-            DEBUG();
             free(data);
             reader->endReached = true;
-            DEBUG();
         }
     }
-    DEBUG();
     return false;
 }
 
@@ -96,10 +85,8 @@ void buffer_reader_release(buffer_reader *reader)
 
 bool buffer_reader_proceed(buffer_reader *reader)
 {
-    DEBUG();
     while (reader->currentBuffer && reader->currentBuffer->checkpoint == reader->currentBuffer->length)
     {
-        DEBUG();
         buffer *next = reader->currentBuffer->nextBuffer;
         buffer_release(reader->currentBuffer);
         if (next)
@@ -108,26 +95,21 @@ bool buffer_reader_proceed(buffer_reader *reader)
         }
         else
         {
-            DEBUG();
             reader->currentBuffer = NULL;
             buffer_reader_acquire(reader);
-            DEBUG();
         }
     }
-    DEBUG();
     return buffer_reader_available(reader) > 0;
 }
 
 bool buffer_reader_has_data(buffer_reader *reader)
 {
-    DEBUG();
     return (reader->currentBuffer || buffer_reader_acquire(reader)) &&
            (reader->currentBuffer->checkpoint < reader->currentBuffer->length || buffer_reader_proceed(reader));
 }
 
 size_t buffer_reader_available(buffer_reader *reader)
 {
-    DEBUG();
     size_t available = 0;
     buffer *curr = reader->currentBuffer;
     while (curr)
@@ -139,7 +121,6 @@ size_t buffer_reader_available(buffer_reader *reader)
         }
         curr = curr->nextBuffer;
     }
-    DEBUG();
     return available;
 }
 
