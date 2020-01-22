@@ -5,12 +5,14 @@
 
 typedef struct screen
 {
-    int x;
-    int y;
+    int width;
+    int height;
 } screen;
 
 void matrix_presentation_init();
 void matrix_presentation_configure_handler(Action action, void (*callback)());
+void matrix_presentation_beep();
+void matrix_presentation_flash();
 void matrix_presentation_exit();
 screen * matrix_presentation_get_screen();
 void matrix_presentation_handle();

@@ -87,7 +87,7 @@ csv_contents *csv_reader_read_file(char *path)
                 {
                     ++token_end;
                 };
-                printf("endchar: %d\n", buffer_reader_current_char(reader, token_end));
+
                 if (buffer_reader_current_char(reader, token_end) == '\n')
                 {
                     contents->lines++;
@@ -107,8 +107,6 @@ csv_contents *csv_reader_read_file(char *path)
                 {
                     ++token_end;
                 };
-
-                printf("endchar: %d\n", buffer_reader_current_char(reader, token_end));
 
                 if (buffer_reader_current_char(reader, token_end) == '\n')
                 {
@@ -137,8 +135,20 @@ csv_contents *csv_reader_read_file(char *path)
         current_token->next = NULL;
     }
 
-    printf("ln: %d\n", '\r');
-    printf("lf: %d\n", '\n');
     buffer_reader_release(reader);
     return contents;
+}
+
+csv_token *csv_reader_get_token(size_t x, size_t y, csv_contents *contents)
+{
+    csv_token *curr_token = contents->first;
+    while (curr_token)
+    {
+        if (curr_token->x == x && curr_token->y == y)
+        {
+            return curr_token;
+        }
+        curr_token = curr_token->next;
+    }
+    return NULL;
 }

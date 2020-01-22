@@ -26,7 +26,7 @@ void matrix_presentation_init()
     cbreak();
     nodelay(stdscr, true);
 
-    getmaxyx(stdscr, field.y, field.x);
+    getmaxyx(stdscr, field.height, field.width);
 }
 
 screen *matrix_presentation_get_screen()
@@ -46,6 +46,16 @@ void *matrix_presentation_get_handler(Action action)
         ac = ac->next;
     }
     return NULL;
+}
+
+void matrix_presentation_beep()
+{
+    beep();
+}
+
+void matrix_presentation_flash()
+{
+    flash();
 }
 
 void matrix_presentation_configure_handler(Action action, void (*callback)())

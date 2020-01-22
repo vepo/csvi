@@ -5,7 +5,8 @@ enum Actions
     UP = 1,
     LEFT = 2,
     DOWN = 3,
-    RIGHT = 4
+    RIGHT = 4,
+    PAINT = 999
 };
 
 typedef enum Actions Action;
