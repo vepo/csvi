@@ -4,11 +4,7 @@
 #include <string.h>
 #include <curses.h>
 
-struct screen
-{
-    int x;
-    int y;
-};
+screen field;
 
 typedef struct actions_config
 {
@@ -30,8 +26,12 @@ void matrix_presentation_init()
     cbreak();
     nodelay(stdscr, true);
 
-    struct screen field;
     getmaxyx(stdscr, field.y, field.x);
+}
+
+screen *matrix_presentation_get_screen()
+{
+    return &field;
 }
 
 void *matrix_presentation_get_handler(Action action)

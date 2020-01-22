@@ -1,16 +1,19 @@
 #ifndef CSV_READER_H_
 #define CSV_READER_H_
+#include <stdlib.h>
 
 typedef struct csv_token
 {
+    size_t x;
+    size_t y;
     char *data;
     struct csv_token *next;
 } csv_token;
 
 typedef struct csv_contents
 {
-    int columns;
-    int lines;
+    size_t columns;
+    size_t lines;
     csv_token *first;
 } csv_contents;
 

@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 csv_contents *csv_reader_read_file(char *path)
 {
     csv_contents *contents = (csv_contents *)malloc(sizeof(csv_contents));
@@ -15,7 +18,7 @@ csv_contents *csv_reader_read_file(char *path)
     csv_token *current_token = NULL;
     buffer_reader *reader = buffer_reader_open(path);
 
-    size_t read = 0;
+    size_t column = 0;
     bool is_escaped = false;
     while (buffer_reader_acquire(reader))
     {
@@ -72,6 +75,8 @@ csv_contents *csv_reader_read_file(char *path)
                 token[token_end - scaped_counter] = '\0';
                 current_token->data = token;
                 current_token->next = (csv_token *)malloc(sizeof(csv_token));
+                current_token->x = column;
+                current_token->y = contents->lines;
                 current_token = current_token->next;
                 token_end++;
                 while (buffer_reader_available(reader) > token_end && isspace(buffer_reader_current_char(reader, token_end)))
@@ -82,6 +87,17 @@ csv_contents *csv_reader_read_file(char *path)
                 {
                     ++token_end;
                 };
+                printf("endchar: %d\n", buffer_reader_current_char(reader, token_end));
+                if (buffer_reader_current_char(reader, token_end) == '\n')
+                {
+                    contents->lines++;
+                    contents->columns = MAX(contents->columns, column);
+                    column = 0;
+                }
+                else
+                {
+                    column++;
+                }
                 buffer_reader_commit(reader, token_end + 1);
             }
             else
@@ -91,10 +107,25 @@ csv_contents *csv_reader_read_file(char *path)
                 {
                     ++token_end;
                 };
+
+                printf("endchar: %d\n", buffer_reader_current_char(reader, token_end));
+
+                if (buffer_reader_current_char(reader, token_end) == '\n')
+                {
+                    contents->lines++;
+                    contents->columns = MAX(contents->columns, column);
+                    column = 0;
+                }
+                else
+                {
+                    column++;
+                }
                 char *token = (char *)malloc(sizeof(char) * token_end + 1);
                 buffer_reader_current_copy(reader, token_end + 1, token);
                 current_token->data = token;
                 current_token->next = (csv_token *)malloc(sizeof(csv_token));
+                current_token->x = column;
+                current_token->y = contents->lines;
                 current_token = current_token->next;
                 buffer_reader_commit(reader, token_end + 1);
             }
@@ -105,6 +136,9 @@ csv_contents *csv_reader_read_file(char *path)
         free(current_token->next);
         current_token->next = NULL;
     }
+
+    printf("ln: %d\n", '\r');
+    printf("lf: %d\n", '\n');
     buffer_reader_release(reader);
     return contents;
 }
