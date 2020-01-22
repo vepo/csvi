@@ -5,7 +5,8 @@ else
 endif
 
 noinst_LIBRARIES = libcsvviewer-base.a
-noinst_HEADERS = csv-reader.h \
+noinst_HEADERS = actions.h \
+		 csv-reader.h \
 		 buffer-reader.h \
      matrix-presentation.h
 
