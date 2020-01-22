@@ -48,6 +48,28 @@ AM_COND_IF(DEBUG,
     AC_DEFINE(DEBUG, 1, [Define to 0 if this is a release build]),
     AC_DEFINE(DEBUG, 0, [Define to 1 or higher if this is a debug build]))
 
+AC_ARG_WITH([curses],
+  [AS_HELP_STRING([--with-curses],
+    [use curses for controlling terminal])],
+  [],
+  [with_curses=auto])
+
+AS_CASE(["$with_curses"],
+  [yes], [PKG_CHECK_MODULES([CURSES],
+            [ncurses],
+            [HAVE_CURSES=1])],
+  [no], [HAVE_CURSES=0],
+  [PKG_CHECK_MODULES([CURSES],
+    [ncurses],
+    [HAVE_CURSES=1],
+    [HAVE_CURSES=0])])
+
+AM_CONDITIONAL([USE_CURSES], [test "$HAVE_CURSES" -eq 1])
+AS_IF([test "$HAVE_CURSES" -eq 1],
+      [AC_DEFINE([HAVE_CURSES],
+      [1],
+      [Use curses])])
+
 # Checks for library functions.
 AC_FUNC_MALLOC
 
