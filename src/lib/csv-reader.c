@@ -108,6 +108,14 @@ csv_contents *csv_reader_read_file(char *path)
                     ++token_end;
                 };
 
+                char *token = (char *)malloc(sizeof(char) * token_end + 1);
+                buffer_reader_current_copy(reader, token_end + 1, token);
+                current_token->data = token;
+                current_token->next = (csv_token *)malloc(sizeof(csv_token));
+                current_token->x = column;
+                current_token->y = contents->lines;
+                current_token = current_token->next;
+
                 if (buffer_reader_current_char(reader, token_end) == '\n')
                 {
                     contents->lines++;
@@ -118,13 +126,7 @@ csv_contents *csv_reader_read_file(char *path)
                 {
                     column++;
                 }
-                char *token = (char *)malloc(sizeof(char) * token_end + 1);
-                buffer_reader_current_copy(reader, token_end + 1, token);
-                current_token->data = token;
-                current_token->next = (csv_token *)malloc(sizeof(csv_token));
-                current_token->x = column;
-                current_token->y = contents->lines;
-                current_token = current_token->next;
+
                 buffer_reader_commit(reader, token_end + 1);
             }
         }
