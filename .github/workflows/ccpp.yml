@@ -9,6 +9,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - name: Install dependencies 
+      run: apt-get install ncurses-devel
     - name: reconf
       run: autoreconf -iv
     - name: configure
