@@ -25,9 +25,7 @@ jobs:
       run: make dist
     - name: getfilename
       run: echo "::set-output name=file::$(ls csv-viewer-*.tar.gz)"
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v1
       with:
-        name: csv-viewer
         path: {{ steps.getfilename.outputs.file }}
 
