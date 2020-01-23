@@ -130,12 +130,24 @@ void matrix_presentation_handle()
     }
 }
 
+size_t calculate_offset(size_t pos, size_t *sizes)
+{
+    size_t curr = 0;
+    size_t offset = 0;
+    while (curr < pos)
+    {
+        offset += sizes[curr];
+        curr++;
+    }
+    return offset;
+}
+
 void matrix_presentation_set_value(size_t x, size_t y, char *data, matrix_config_t *config)
 {
     CHECK_FATAL_FN(!config, "Matrix no configured!\n", matrix_presentation_exit);
-    mvprintw(0, 0, "0,0");
-    mvprintw(configuration.height - 1, 0, "y");
-    mvprintw(0, configuration.width - 1, "x");
+    size_t offset_top = calculate_offset(y, config->line_height);
+    size_t offset_left = calculate_offset(x, config->column_width);
+    mvprintw(offset_top, offset_left, data);
 }
 
 void matrix_presentation_exit()

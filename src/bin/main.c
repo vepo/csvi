@@ -134,7 +134,7 @@ bool can_show(csv_token *start_token, size_t width, size_t height, screen_config
 void expand_view(screen_config_t *available, csv_token *start_token, screen_config_t *used)
 {
     bool can_grow_x = true, can_grow_y = true;
-    while (can_grow_x && can_grow_y)
+    while (can_grow_x || can_grow_y)
     {
         if (can_grow_x && can_grow_y)
         {
