@@ -21,3 +21,11 @@ jobs:
       run: make check
     - name: make distcheck
       run: make distcheck
+    - name: make dist
+      run: make dist
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: csv-viewer
+        path: csv-viewer-*.tar.gz
+
