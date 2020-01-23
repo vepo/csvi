@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install dependencies 
-      run: sudo apt-get update && sudo apt-get install libncurses5-dev
+      run: sudo apt-get update && sudo apt-get libncurses5-dev libncursesw5-dev
     - name: reconf
       run: autoreconf -iv
     - name: configure

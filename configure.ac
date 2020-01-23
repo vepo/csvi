@@ -16,6 +16,8 @@ AC_PROG_CC_C99
 AC_PROG_CPP
 AC_PROG_RANLIB
 
+m4_include([m4/ax_with_curses.m4])
+
 # Reset the externally set CFLAGS after calling AC_PROG*
 CFLAGS="$EXTERNAL_CFLAGS"
 
@@ -54,21 +56,13 @@ AC_ARG_WITH([curses],
   [],
   [with_curses=auto])
 
-AS_CASE(["$with_curses"],
-  [yes], [PKG_CHECK_MODULES([CURSES],
-            [ncurses],
-            [HAVE_CURSES=1])],
-  [no], [HAVE_CURSES=0],
-  [PKG_CHECK_MODULES([CURSES],
-    [ncurses],
-    [HAVE_CURSES=1],
-    [HAVE_CURSES=0])])
+AX_WITH_CURSES
 
-AM_CONDITIONAL([USE_CURSES], [test "$HAVE_CURSES" -eq 1])
-AS_IF([test "$HAVE_CURSES" -eq 1],
-      [AC_DEFINE([HAVE_CURSES],
-      [1],
-      [Use curses])])
+if test $ax_cv_curses == yes; then
+    LIBS="$LIBS $CURSES_LIB"
+else 
+    AC_ERROR([A working curses library is required])
+fi
 
 # Checks for library functions.
 AC_FUNC_MALLOC

@@ -1,16 +1,10 @@
-if DEBUG
-  AM_CFLAGS =-I$(top_srcdir)/src/lib -lncurses -Wall -g -O3
-else
-  AM_CFLAGS =-I$(top_srcdir)/src/lib -lncurses -Wall
-endif
-
 noinst_LIBRARIES = libcsvviewer-base.a
 noinst_HEADERS = actions.h \
-     helper.h \
+		 helper.h \
 		 csv-reader.h \
 		 buffer-reader.h \
-     matrix-config.h \
-     matrix-presentation.h
+		 matrix-config.h \
+		 matrix-presentation.h
 
 libcsvviewer_base_a_SOURCES = \
                               $(libcsvviewer_base_a_HEADERS) \
