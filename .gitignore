@@ -38,5 +38,11 @@ stamp-h1
 *.lo
 *.gcno
 *.gcda
+config.guess
+config.sub
+ltmain.sh
+test-driver
+tests/run_all_tests
+tests/run_all_tests.trs
 
 src/bin/csvviewer

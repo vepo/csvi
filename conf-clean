@@ -1,0 +1,20 @@
+#!/bin/bash
+rm -rf m4 autom4te.cache \
+          aclocal.m4 \
+          $(find . -name "Makefile") \
+          $(find . -name "Makefile.in") \
+          missing \
+          compile \
+          config.guess \
+          config.status \
+          config.log \
+          config.h* \
+          config.sub \
+          configure \
+          depcomp \
+          install-sh \
+          test-driver \
+          libtool \
+          ltmain.sh \
+          $(find . -name "*.o") \
+          $(find . -name "*.a")

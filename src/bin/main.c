@@ -138,7 +138,9 @@ void expand_view(screen_config_t *available, csv_token *start_token, screen_conf
     {
         if (can_grow_x && can_grow_y)
         {
-            if (can_show(start_token, used->width + 1, used->height + 1, available))
+            if (can_show(start_token, used->width + 1, used->height + 1, available) &&
+                used->width < open_file->columns &&
+                used->height < open_file->lines)
             {
                 used->width++;
                 used->height++;
@@ -147,7 +149,8 @@ void expand_view(screen_config_t *available, csv_token *start_token, screen_conf
 
         if (can_grow_x)
         {
-            if (can_show(start_token, used->width + 1, used->height, available))
+            if (can_show(start_token, used->width + 1, used->height, available) &&
+                used->width < open_file->columns)
             {
                 used->width++;
             }
@@ -158,7 +161,8 @@ void expand_view(screen_config_t *available, csv_token *start_token, screen_conf
         }
         else
         {
-            if (can_show(start_token, used->width, used->height + 1, available))
+            if (can_show(start_token, used->width, used->height + 1, available) &&
+                used->height < open_file->lines)
             {
                 used->height++;
             }

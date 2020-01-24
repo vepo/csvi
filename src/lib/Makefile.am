@@ -1,3 +1,9 @@
+if DEBUG
+  AM_CFLAGS =-I$(top_srcdir)/src/lib -Wall -g -O3
+else
+  AM_CFLAGS =-I$(top_srcdir)/src/lib -Wall
+endif
+
 noinst_LIBRARIES = libcsvviewer-base.a
 noinst_HEADERS = actions.h \
 		 helper.h \
