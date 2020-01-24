@@ -46,3 +46,6 @@ tests/run_all_tests
 tests/run_all_tests.trs
 
 src/bin/csvviewer
+
+coverage-report
+coverage.info

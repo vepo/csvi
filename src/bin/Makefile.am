@@ -5,5 +5,7 @@ else
 endif
 
 bin_PROGRAMS = csvviewer
+
 csvviewer_SOURCES = main.c
+csvviewer_LDFLAGS = $(TC_LDFLAGS)
 csvviewer_LDADD = $(top_builddir)/src/lib/libcsvviewer-base.a $(AM_LDFLAGS) @CURSES_LIBS@

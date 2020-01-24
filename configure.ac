@@ -5,6 +5,7 @@ AC_PREREQ([2.69])
 AC_INIT([csv-viewer], [0.0.1], [victor.perticarrari@gmail.com])
 AC_CONFIG_SRCDIR([src/bin/main.c])
 AC_CONFIG_HEADERS([config.h])
+m4_include([m4-lib/coverage.m4])
 AM_INIT_AUTOMAKE
 PKG_PROG_PKG_CONFIG
 
@@ -56,5 +57,5 @@ AC_FUNC_MALLOC
 AC_CONFIG_FILES([Makefile
                  src/lib/Makefile
                  src/bin/Makefile
-		 tests/Makefile])
+                 tests/Makefile])
 AC_OUTPUT
