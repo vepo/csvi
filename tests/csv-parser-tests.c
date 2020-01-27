@@ -41,11 +41,39 @@ void print_csv_token(csv_token *token)
     fflush(stdout);
 }
 
+#define LARGE_CONTENT "qwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnm"
+#define LARGE_CONTENT_WITH_QUOTE "   \"qwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnm\"    "
+
 START_TEST(test_csv_reader_simple_csv)
 {
     csv_contents *open_file = csv_reader_read_file("simple.csv");
     ck_assert_ptr_ne(open_file, NULL);
     ck_assert_uint_eq(open_file->columns, 3);
+    ck_assert_uint_eq(open_file->lines, 3);
+
+    csv_token *expected = mock_token(0, 0, "cell 0,0",
+                                     mock_token(0, 1, "value-1",
+                                                mock_token(0, 2, LARGE_CONTENT,
+                                                           mock_token(0, 3, "value-1",
+                                                                      mock_token(1, 0, "cell 1,0",
+                                                                                 mock_token(1, 1, "value-2    ;  ",
+                                                                                            mock_token(1, 2, LARGE_CONTENT,
+                                                                                                       mock_token(1, 3, "value-2;",
+                                                                                                                  mock_token(2, 0, "cell 2,0",
+                                                                                                                             mock_token(2, 1, "value-3 ; , ;",
+                                                                                                                                        mock_token(2, 2, LARGE_CONTENT_WITH_QUOTE,
+                                                                                                                                                   mock_token(2, 3, "value-3", NULL))))))))))));
+    // print_csv_token(open_file->first);
+    // print_csv_token(expected);
+    assert_csv_token_eq(open_file->first, expected);
+}
+END_TEST
+
+START_TEST(test_csv_reader_complex_csv)
+{
+    csv_contents *open_file = csv_reader_read_file("complex.csv");
+    ck_assert_ptr_ne(open_file, NULL);
+    ck_assert_uint_eq(open_file->columns, 4);
     ck_assert_uint_eq(open_file->lines, 4);
     csv_token *expected = mock_token(0, 0, "cell 0,0",
                                      mock_token(0, 1, "cell 0,1",
@@ -65,12 +93,14 @@ START_TEST(test_csv_reader_simple_csv)
 }
 END_TEST
 
+
 Suite *csv_parser_test_suite(void)
 {
     Suite *s = suite_create("CSV Parser");
     TCase *tc_core = tcase_create("Core");
 
     tcase_add_test(tc_core, test_csv_reader_simple_csv);
+    tcase_add_test(tc_core, test_csv_reader_complex_csv);
 
     suite_add_tcase(s, tc_core);
     return s;
