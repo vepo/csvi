@@ -1,6 +1,7 @@
 #!/bin/bash
 rm -rf m4 autom4te.cache \
           aclocal.m4 \
+          stamp-h1 \
           $(find . -name "Makefile") \
           $(find . -name "Makefile.in") \
           missing \
@@ -16,5 +17,10 @@ rm -rf m4 autom4te.cache \
           test-driver \
           libtool \
           ltmain.sh \
+          csv-viewer-*.tar.gz \
+          coverage.info \
+          coverage-report \
+          $(find . -name "*.gcno") \
+          $(find . -name "*.gcda") \
           $(find . -name "*.o") \
           $(find . -name "*.a")

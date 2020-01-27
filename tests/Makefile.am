@@ -1,13 +1,19 @@
-TESTS = run_all_tests
+TESTS = csv_parser_tests
 
-check_PROGRAMS = run_all_tests
+check_PROGRAMS = csv_parser_tests
 
-if DEBUG
-  run_all_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@
+if COVERAGE
+  COVERAGE_CFLAG = -ftest-coverage -fprofile-arcs
 else
-  run_all_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@
+  COVERAGE_CFLAG =
 endif
 
-run_all_tests_LDFLAGS = $(TC_LDFLAGS)
-run_all_tests_SOURCES = run_all_tests.c 
-run_all_tests_LDADD = $(top_builddir)/src/lib/*.o $(AM_LDFLAGS) @CURSES_LIBS@  @CHECK_LIBS@
+if DEBUG
+  csv_parser_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
+else
+  csv_parser_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
+endif
+
+csv_parser_tests_LDFLAGS = $(TC_LDFLAGS)
+csv_parser_tests_SOURCES = csv-parser-tests.c 
+csv_parser_tests_LDADD = $(top_builddir)/src/lib/*.o $(AM_LDFLAGS) @CURSES_LIBS@  @CHECK_LIBS@

@@ -3,9 +3,9 @@
 
 AC_PREREQ([2.69])
 AC_INIT([csv-viewer], [0.0.1], [victor.perticarrari@gmail.com])
+
 AC_CONFIG_SRCDIR([src/bin/main.c])
 AC_CONFIG_HEADERS([config.h])
-m4_include([m4-lib/coverage.m4])
 AM_INIT_AUTOMAKE
 PKG_PROG_PKG_CONFIG
 
@@ -13,13 +13,18 @@ PKG_PROG_PKG_CONFIG
 EXTERNAL_CFLAGS="$CFLAGS"
 
 # Checks for programs.
+AC_PROG_CC
 AC_PROG_CC_C99
-AC_PROG_CPP
+AC_PROG_CXX
 AC_PROG_RANLIB
 AC_PROG_LIBTOOL
 
 PKG_CHECK_MODULES([CHECK], [check >= 0.9.6])
 PKG_CHECK_MODULES([CURSES], [ncurses])
+
+dnl Added for AX_CODE_COVERAGE macro to work correctly, even though there's no Fortran here.
+AC_PROG_FC
+
 
 # Reset the externally set CFLAGS after calling AC_PROG*
 CFLAGS="$EXTERNAL_CFLAGS"
@@ -30,6 +35,7 @@ AC_LANG([C])
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stddef.h stdlib.h string.h unistd.h])
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -50,6 +56,22 @@ AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
 AM_COND_IF(DEBUG,
     AC_DEFINE(DEBUG, 1, [Define to 0 if this is a release build]),
     AC_DEFINE(DEBUG, 0, [Define to 1 or higher if this is a debug build]))
+
+# Add debug support
+AC_ARG_ENABLE(coverage,
+  AS_HELP_STRING(
+    [--enable-coverage],
+    [enable coverage, default: no]),
+    [case "${enableval}" in
+      yes) coverage=true ;;
+      no)  coverage=false ;;
+      *)   AC_MSG_ERROR([bad value ${enableval} for --enable-coverage]) ;;
+    esac],
+    [coverage=false])
+AM_CONDITIONAL(COVERAGE, test x"$coverage" = x"true")
+AM_COND_IF(COVERAGE,
+    AC_DEFINE(COVERAGE, 1, [Define to 0 if this is a release build]),
+    AC_DEFINE(COVERAGE, 0, [Define to 1 or higher if this is a debug build]))
 
 # Checks for library functions.
 AC_FUNC_MALLOC

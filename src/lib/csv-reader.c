@@ -131,10 +131,23 @@ csv_contents *csv_reader_read_file(char *path)
             }
         }
     }
-    if (current_token->next)
+
+    csv_token *it = contents->first;
+    while (it->next != current_token)
     {
-        free(current_token->next);
-        current_token->next = NULL;
+        it = it->next;
+    }
+    
+    if (it->next && !it->next->data)
+    {
+        free(it->next);
+        it->next = NULL;
+    }
+
+    if (contents->first)
+    {
+        contents->columns++;
+        contents->lines++;
     }
 
     buffer_reader_release(reader);
