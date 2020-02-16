@@ -19,7 +19,7 @@ AC_PROG_CXX
 AC_PROG_RANLIB
 AC_PROG_LIBTOOL
 
-PKG_CHECK_MODULES([CHECK], [check >= 0.9.6])
+PKG_CHECK_MODULES([CHECK], [check])
 PKG_CHECK_MODULES([CURSES], [ncurses])
 
 dnl Added for AX_CODE_COVERAGE macro to work correctly, even though there's no Fortran here.

@@ -4,13 +4,23 @@
 
 #include "csv-reader.h"
 
-csv_token *mock_token(size_t y, size_t x, char *data, csv_token *next)
+csv_token *mock_token(size_t y, size_t x, char *data, csv_token *start)
 {
     csv_token *token = (csv_token *)malloc(sizeof(csv_token));
     token->data = data;
     token->y = y;
     token->x = x;
-    token->next = next;
+    token->next = NULL;
+
+    if (start)
+    {
+        csv_token *last = start;
+        while (last->next)
+        {
+            last = last->next;
+        }
+        last->next = token;
+    }
     return token;
 }
 
@@ -32,13 +42,14 @@ void print_csv_token(csv_token *token)
     if (token)
     {
         printf("Token (%ld, %ld) %s\n", token->y, token->x, token->data);
+        fflush(stdout);
         print_csv_token(token->next);
     }
     else
     {
         printf("END\n");
+        fflush(stdout);
     }
-    fflush(stdout);
 }
 
 #define LARGE_CONTENT "qwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnmqwertyuiopasddfghjklçzxcvbnm"
@@ -47,23 +58,26 @@ void print_csv_token(csv_token *token)
 START_TEST(test_csv_reader_simple_csv)
 {
     csv_contents *open_file = csv_reader_read_file("simple.csv");
+
+    // print_csv_token(open_file->first);
+
     ck_assert_ptr_ne(open_file, NULL);
     ck_assert_uint_eq(open_file->columns, 3);
-    ck_assert_uint_eq(open_file->lines, 3);
+    ck_assert_uint_eq(open_file->lines, 4);
 
-    csv_token *expected = mock_token(0, 0, "cell 0,0",
-                                     mock_token(0, 1, "value-1",
-                                                mock_token(0, 2, LARGE_CONTENT,
-                                                           mock_token(0, 3, "value-1",
-                                                                      mock_token(1, 0, "cell 1,0",
-                                                                                 mock_token(1, 1, "value-2    ;  ",
-                                                                                            mock_token(1, 2, LARGE_CONTENT,
-                                                                                                       mock_token(1, 3, "value-2;",
-                                                                                                                  mock_token(2, 0, "cell 2,0",
-                                                                                                                             mock_token(2, 1, "value-3 ; , ;",
-                                                                                                                                        mock_token(2, 2, LARGE_CONTENT_WITH_QUOTE,
-                                                                                                                                                   mock_token(2, 3, "value-3", NULL))))))))))));
-    // print_csv_token(open_file->first);
+    csv_token *expected = mock_token(0, 0, "cell 0,0", NULL);
+    mock_token(0, 1, "cell 0,1", expected);
+    mock_token(0, 2, "cell 0,2", expected);
+    mock_token(1, 0, "cell 1,0", expected);
+    mock_token(1, 1, "cell 1,1", expected);
+    mock_token(1, 2, "cell 1,2", expected);
+    mock_token(2, 0, "cell 2,0", expected);
+    mock_token(2, 1, "cell 2,1", expected);
+    mock_token(2, 2, "cell 2,2", expected);
+    mock_token(3, 0, "cell 3,0", expected);
+    mock_token(3, 1, "cell 3,1", expected);
+    mock_token(3, 2, "cell 3,2", expected);
+
     // print_csv_token(expected);
     assert_csv_token_eq(open_file->first, expected);
 }
@@ -72,27 +86,30 @@ END_TEST
 START_TEST(test_csv_reader_complex_csv)
 {
     csv_contents *open_file = csv_reader_read_file("complex.csv");
+
+    print_csv_token(open_file->first);
+
     ck_assert_ptr_ne(open_file, NULL);
     ck_assert_uint_eq(open_file->columns, 4);
-    ck_assert_uint_eq(open_file->lines, 4);
-    csv_token *expected = mock_token(0, 0, "cell 0,0",
-                                     mock_token(0, 1, "cell 0,1",
-                                                mock_token(0, 2, "cell 0,2",
-                                                           mock_token(1, 0, "cell 1,0",
-                                                                      mock_token(1, 1, "cell 1,1",
-                                                                                 mock_token(1, 2, "cell 1,2",
-                                                                                            mock_token(2, 0, "cell 2,0",
-                                                                                                       mock_token(2, 1, "cell 2,1",
-                                                                                                                  mock_token(2, 2, "cell 2,2",
-                                                                                                                             mock_token(3, 0, "cell 3,0",
-                                                                                                                                        mock_token(3, 1, "cell 3,1",
-                                                                                                                                                   mock_token(3, 2, "cell 3,2", NULL))))))))))));
+    ck_assert_uint_eq(open_file->lines, 3);
+    csv_token *expected = mock_token(0, 0, "cell 0,0", NULL);
+    mock_token(0, 1, "value-1", expected);
+    mock_token(0, 2, LARGE_CONTENT, expected);
+    mock_token(0, 3, "value-1", expected);
+    mock_token(1, 0, "cell 1,0", expected);
+    mock_token(1, 1, "value-2    ;  ", expected);
+    mock_token(1, 2, LARGE_CONTENT, expected);
+    mock_token(1, 3, "value-2;", expected);
+    mock_token(2, 0, "cell 2,0", expected);
+    mock_token(2, 1, "value-3 ; , ;", expected);
+    mock_token(2, 2, LARGE_CONTENT_WITH_QUOTE, expected);
+    mock_token(2, 3, "value-3", expected);
     // print_csv_token(open_file->first);
+
     // print_csv_token(expected);
     assert_csv_token_eq(open_file->first, expected);
 }
 END_TEST
-
 
 Suite *csv_parser_test_suite(void)
 {
@@ -111,7 +128,8 @@ int main(void)
     int number_failed;
     Suite *s = csv_parser_test_suite();
     SRunner *sr = srunner_create(s);
-    srunner_run_all(sr, CK_NORMAL);
+    srunner_set_log(sr, "test-output.log");
+    srunner_run_all(sr, CK_VERBOSE);
     number_failed = srunner_ntests_failed(sr);
     srunner_free(sr);
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
