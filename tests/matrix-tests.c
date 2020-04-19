@@ -17,10 +17,27 @@ START_TEST(test_matrix_initialization)
 }
 END_TEST
 
+/************************************************
+ * |                40                    |
+ * ┌──────────────────────────────────────┐ ---
+ * │ cell 0,0 | cell 0,1 | cell 0,2 |     │
+ * │ cell 1,0 | cell 1,1 | cell 1,2 |     │
+ * │ cell 2,0 | cell 2,1 | cell 2,2 |     │
+ * │ cell 3,0 | cell 3,1 | cell 3,2 |     │
+ * │                                      │ 10
+ * │                                      │
+ * │                                      │
+ * │                                      │
+ * │                                      │
+ * └──────────────────────────────────────┘ ---
+ **/
+
 START_TEST(test_matrix_expansion)
 {
     matrix_config_t *config = matrix_config_initialize(10, 10);
-    screen_config_t windows_configuration = {.width = 120, .height = 80};
+    config->cell_padding_right = config->cell_padding_left = 1;
+    config->margin_bottom = 1;
+    screen_config_t windows_configuration = {.width = 40, .height = 10};
     screen_config_t presentation_configuration = {.width = 1, .height = 1};
 
     csv_token *contents = mock_token(0, 0, "cell 0,0", NULL);

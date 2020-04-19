@@ -9,6 +9,14 @@ typedef struct matrix_config
 {
     size_t *column_width;
     size_t *line_height;
+    size_t cell_padding_top;
+    size_t cell_padding_right;
+    size_t cell_padding_bottom;
+    size_t cell_padding_left;
+    size_t margin_top;
+    size_t margin_right;
+    size_t margin_bottom;
+    size_t margin_left;
 } matrix_config_t;
 
 typedef struct screen_config
