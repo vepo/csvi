@@ -3,6 +3,18 @@
 ## Build process
 To undestand a little more about the building process: http://blog.fourthbit.com/2013/06/18/creating-an-open-source-program-in-c-with-autotools-part-1-of-2/
 
+## Dependencies
+
+```bash
+sudo apt update
+sudo apt install gcc
+sudo apt install libtool
+sudo apt install make
+sudo apt install check
+sudo apt install pkg-config
+sudo apt install libncurses5-dev
+```
+
 ## Code Coverage
 
 ```bash

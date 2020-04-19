@@ -33,28 +33,29 @@ csv_contents *csv_reader_read_file(char *path)
             {
                 size_t token_end = 2;
                 size_t scaped_counter = 0;
-                bool in_scaped_char = false;
-                while (buffer_reader_available(reader) > token_end + 1 && !in_scaped_char && buffer_reader_current_char(reader, token_end) != '"')
+                while ((buffer_reader_available(reader) > token_end + 1))
                 {
-                    ++token_end;
-                    if (!in_scaped_char && buffer_reader_current_char(reader, token_end) == '"')
+                    if (buffer_reader_current_char(reader, token_end) == '"' && buffer_reader_current_char(reader, token_end + 1) == '"')
                     {
-                        in_scaped_char = true;
+                        token_end += 2;
                         scaped_counter++;
+                        continue;
+                    }
+
+                    if (buffer_reader_current_char(reader, token_end) == '"')
+                    {
+                        ++token_end;
+                        break;
                     }
                     else
                     {
-                        in_scaped_char = false;
+                        ++token_end;
                     }
                 }
-                while (buffer_reader_available(reader) > token_end + 2 && !(buffer_reader_current_char(reader, token_end) == '"' && buffer_reader_current_char(reader, token_end + 1) != '"'))
-                {
-                    ++token_end;
-                };
-                char *token = (char *)malloc(sizeof(char) * (token_end - 1 - scaped_counter));
-                in_scaped_char = false;
+                char *token = (char *)malloc(sizeof(char) * (token_end - scaped_counter));
                 scaped_counter = 0;
-                for (int bufferPos = 1, tokenPos = 0; bufferPos <= token_end + 1; bufferPos++)
+                bool in_scaped_char = false;
+                for (int bufferPos = 1, tokenPos = 0; bufferPos <= token_end; bufferPos++)
                 {
                     if (!in_scaped_char && buffer_reader_current_char(reader, bufferPos) == '"')
                     {
@@ -67,7 +68,7 @@ csv_contents *csv_reader_read_file(char *path)
                         token[tokenPos++] = buffer_reader_current_char(reader, bufferPos);
                     }
                 }
-                token[token_end - scaped_counter] = '\0';
+                token[token_end - scaped_counter - 1] = '\0';
                 csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
                 current_token->data = token;
                 current_token->x = column;
@@ -83,8 +84,12 @@ csv_contents *csv_reader_read_file(char *path)
                 {
                     last_token = contents->first = current_token;
                 }
-                token_end++;
-                while (buffer_reader_available(reader) > token_end && isspace(buffer_reader_current_char(reader, token_end)))
+
+                if (buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != ';')
+                {
+                    token_end++;
+                }
+                while (buffer_reader_available(reader) > token_end && isspace(buffer_reader_current_char(reader, token_end)) && buffer_reader_current_char(reader, token_end) != '\n')
                 {
                     ++token_end;
                 };
@@ -92,7 +97,6 @@ csv_contents *csv_reader_read_file(char *path)
                 {
                     ++token_end;
                 };
-
                 if (buffer_reader_current_char(reader, token_end) == '\n')
                 {
                     contents->lines++;
@@ -108,13 +112,17 @@ csv_contents *csv_reader_read_file(char *path)
             else
             {
                 size_t token_end = 0;
+                int space_pos = 0;
                 while ((buffer_reader_available(reader) > token_end || !reader->endReached) && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
                 {
                     ++token_end;
                 };
 
-                char *token = (char *)malloc(sizeof(char) * token_end + 1);
-                buffer_reader_current_copy(reader, token_end + 1, token);
+                for (; isspace(buffer_reader_current_char(reader, token_end - space_pos - 1)); space_pos++)
+                    ;
+
+                char *token = (char *)malloc(sizeof(char) * (token_end + 1 - space_pos));
+                buffer_reader_current_copy(reader, token_end + 1 - space_pos, token);
                 csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
                 current_token->data = token;
                 current_token->x = column;

@@ -17,5 +17,5 @@ else
 endif
 
 csv_parser_tests_LDFLAGS = $(COVERAGE_LDFLAG)
-csv_parser_tests_SOURCES = csv-parser-tests.c 
+csv_parser_tests_SOURCES = csv-parser-tests.c
 csv_parser_tests_LDADD = $(top_builddir)/src/lib/*.o $(AM_LDFLAGS) @CURSES_LIBS@  @CHECK_LIBS@
