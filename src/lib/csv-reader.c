@@ -195,16 +195,23 @@ void csv_token_dispose(csv_token *token)
 {
     if (token)
     {
+        printf("Token!\n");
+        fflush(stdout);
         if (token->next)
         {
+            printf("Disposing next...\n");
+            fflush(stdout);
             csv_token_dispose(token->next);
         }
 
         if (token->data)
         {
+            printf("Disposing data...\n");
+            fflush(stdout);
             free(token->data);
         }
-
+        printf("Disposing token...\n");
+        fflush(stdout);
         free(token);
     }
 }
