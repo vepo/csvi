@@ -178,3 +178,33 @@ csv_token *csv_reader_get_token(size_t x, size_t y, csv_contents *contents)
     }
     return NULL;
 }
+
+void csv_contents_dispose(csv_contents *contents)
+{
+    if (contents)
+    {
+        if (contents->first)
+        {
+            csv_token_dispose(contents->first);
+        }
+        free(contents);
+    }
+}
+
+void csv_token_dispose(csv_token *token)
+{
+    if (token)
+    {
+        if (token->next)
+        {
+            csv_token_dispose(token->next);
+        }
+
+        if (token->data)
+        {
+            free(token->data);
+        }
+
+        free(token);
+    }
+}
