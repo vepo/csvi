@@ -4,6 +4,7 @@
 #include <string.h>
 #include <curses.h>
 #include "helper.h"
+#include "logger.h"
 
 screen_config_t configuration;
 
@@ -15,6 +16,18 @@ typedef struct actions_config
 } actions_config;
 
 actions_config *INITIAL_ACTION = NULL;
+
+void rectangle(int y1, int x1, int y2, int x2)
+{
+    mvhline(y1, x1, 0, x2 - x1);
+    mvhline(y2, x1, 0, x2 - x1);
+    mvvline(y1, x1, 0, y2 - y1);
+    mvvline(y1, x2, 0, y2 - y1);
+    mvaddch(y1, x1, ACS_ULCORNER);
+    mvaddch(y2, x1, ACS_LLCORNER);
+    mvaddch(y1, x2, ACS_URCORNER);
+    mvaddch(y2, x2, ACS_LRCORNER);
+}
 
 void matrix_presentation_init()
 {
@@ -28,6 +41,7 @@ void matrix_presentation_init()
     nodelay(stdscr, true);
 
     getmaxyx(stdscr, configuration.height, configuration.width);
+    rectangle(0, 0, configuration.height - 2, configuration.width - 1);
 }
 
 screen_config_t *matrix_presentation_get_screen_config()
@@ -134,11 +148,14 @@ size_t calculate_offset(size_t pos, size_t *sizes)
 {
     size_t curr = 0;
     size_t offset = 0;
+    //log_info("Calculating: pos=%d...\n", pos);
     while (curr < pos)
     {
-        offset += sizes[curr];
+        //  log_info("Add offset offset=%d size=%d\n", offset, sizes[curr]);
+        offset += sizes[curr] + 1;
         curr++;
     }
+    //log_info("Returning... offset=%d\n", offset);
     return offset;
 }
 
@@ -147,7 +164,8 @@ void matrix_presentation_set_value(size_t x, size_t y, char *data, matrix_config
     CHECK_FATAL_FN(!config, "Matrix no configured!\n", matrix_presentation_exit);
     size_t offset_top = calculate_offset(y, config->line_height);
     size_t offset_left = calculate_offset(x, config->column_width);
-    mvprintw(offset_top, offset_left, data);
+    //log_info("x=%d y=%d top=%d left=%d\n", x, y, offset_top, offset_left);
+    mvprintw(offset_top + 1, offset_left + 1, data);
 }
 
 void matrix_presentation_exit()

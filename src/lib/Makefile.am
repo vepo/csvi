@@ -12,6 +12,7 @@ endif
 
 noinst_LIBRARIES = libcsvviewer-base.a
 noinst_HEADERS = actions.h \
+                 logger.h \
                  helper.h \
                  csv-reader.h \
                  buffer-reader.h \
@@ -20,6 +21,7 @@ noinst_HEADERS = actions.h \
 
 libcsvviewer_base_a_SOURCES = \
                               $(libcsvviewer_base_a_HEADERS) \
+                              logger.c \
                               csv-reader.c \
                               buffer-reader.c \
                               matrix-config.c \

@@ -4,12 +4,6 @@
 #include "actions.h"
 #include "matrix-config.h"
 
-typedef struct screen_config
-{
-    int width;
-    int height;
-} screen_config_t;
-
 void matrix_presentation_init();
 void matrix_presentation_configure_handler(Action action, void (*callback)());
 void matrix_presentation_beep();
