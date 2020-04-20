@@ -72,9 +72,17 @@ void down()
 void paint()
 {
     screen_config_t *scr_config = matrix_presentation_get_screen_config();
+    matrix_properties_t m_properties = {.cell_padding_top = 0,
+                                        .cell_padding_right = 2,
+                                        .cell_padding_bottom = 0,
+                                        .cell_padding_left = 1,
+                                        .margin_top = 1,
+                                        .margin_right = 1,
+                                        .margin_bottom = 2,
+                                        .margin_left = 1};
     csv_token *token = csv_reader_get_token(top_x, top_y, open_file);
     screen_config_t curr = {.width = 1, .height = 1};
-    matrix_config_get_most_expanded(scr_config, token, open_file->lines, open_file->columns, &curr);
+    matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &curr);
     matrix_config_t *config = matrix_config_initialize(curr.width, curr.height);
     matrix_config_load(curr.width, curr.height, token, config);
     //log_info("Initializing...\n");
