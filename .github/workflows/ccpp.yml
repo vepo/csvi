@@ -10,11 +10,28 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install dependencies 
-      run: sudo apt-get update && sudo apt-get install libncurses5-dev libncursesw5-dev pkg-config check
+      run: sudo apt-get update && sudo apt install -y libncurses5-dev libncursesw5-dev pkg-config check unzip
     - name: reconf
       run: autoreconf -iv
     - name: configure
       run: ./configure
+    - name: Run Sonar
+      run: |
+        wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+        unzip build-wrapper-linux-x86.zip
+        ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output  make
+        wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
+        unzip sonar-scanner-cli-4.2.0.1873-linux.zip
+        ./sonar-scanner-4.2.0.1873-linux/bin/sonar-scanner -Dsonar.organization=vepo-github \
+                                                           -Dsonar.projectKey=csv-viewer \
+                                                           -Dsonar.sources=. \
+                                                           -Dsonar.host.url=https://sonarcloud.io \
+                                                           -Dsonar.cfamily.build-wrapper-output=bw-output \
+                                                           -Dsonar.branch.name=${BASE_BRANCH} \
+                                                           -Dsonar.login=${SONAR_TOKEN}
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        BASE_BRANCH: ${{ github.base_ref }}
     - name: make
       run: make
     - name: make check
