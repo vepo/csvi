@@ -30,6 +30,7 @@ jobs:
                                                            -Dsonar.branch.name=${BASE_BRANCH} \
                                                            -Dsonar.login=${SONAR_TOKEN}
       env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         BASE_BRANCH: ${{ github.base_ref }}
     - name: make
