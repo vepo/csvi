@@ -116,7 +116,6 @@ START_TEST(test_matrix_expansion_bigger)
     mock_token(5, 3, "cell 5,3", contents);
 
     matrix_config_get_most_expanded(&windows_configuration, &m_properties, contents, 4, 6, &presentation_configuration);
-    fflush(stdout);
 
     ck_assert_int_eq(3, presentation_configuration.width);
     ck_assert_int_eq(5, presentation_configuration.height);

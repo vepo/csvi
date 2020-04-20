@@ -109,10 +109,12 @@ void matrix_config_get_most_expanded(screen_config_t *available, matrix_properti
 
             if (offset_x >= used->width || offset_y >= used->height)
             {
-                if (can_show(available, properties, widths, heights, offset_x, offset_y))
+                size_t columns = offset_x + 1;
+                size_t lines = offset_y + 1;
+                if (can_show(available, properties, widths, heights, columns, lines))
                 {
-                    used->width = offset_x + 1;
-                    used->height = offset_y + 1;
+                    used->width = columns;
+                    used->height = lines;
                 }
             }
         }
@@ -138,18 +140,15 @@ size_t str_count_lines(char *data)
 
 void matrix_config_load(size_t width, size_t height, csv_token *start_token, matrix_config_t *config)
 {
-    log_info("Size (%d, %d)\n", width, height);
     csv_token *curr_token = start_token;
     if (curr_token)
     {
-        log_info("Curr token (%d, %d)\n", curr_token->x, curr_token->y);
         if (curr_token->x >= start_token->x && curr_token->x < start_token->x + width)
         {
             size_t len = strlen(curr_token->data);
             if (config->column_width[curr_token->x - start_token->x] < len)
             {
                 config->column_width[curr_token->x - start_token->x] = len;
-                log_info("Updating width[%d]=%d\n", curr_token->x - start_token->x, len);
             }
         }
 
@@ -159,7 +158,6 @@ void matrix_config_load(size_t width, size_t height, csv_token *start_token, mat
             if (config->line_height[curr_token->y - start_token->y] < len)
             {
                 config->line_height[curr_token->y - start_token->y] = len;
-                log_info("Updating height[%d]=%d\n", curr_token->y - start_token->y, len);
             }
         }
         curr_token = curr_token->next;
