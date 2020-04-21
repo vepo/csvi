@@ -36,14 +36,13 @@ jobs:
       run: |
         ./sonar-scanner-4.2.0.1873-linux/bin/sonar-scanner -Dsonar.organization=vepo-github \
                                                            -Dsonar.projectKey=csv-viewer \
-                                                           -Dsonar.sources=. \
+                                                           -Dsonar.sources=src \
                                                            -Dsonar.host.url=https://sonarcloud.io \
                                                            -Dsonar.cfamily.build-wrapper-output=bw-output \
                                                            -Dsonar.branch.name=${BASE_BRANCH} \
                                                            -Dsonar.login=${SONAR_TOKEN} \
                                                            -Dsonar.cfamily.gcov.reportsPath=src \
-                                                           -Dsonar.exclusions=tests/**/* \
-                                                           -Dsonar.sources=src/**/*
+                                                           -Dsonar.exclusions=tests/**/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
