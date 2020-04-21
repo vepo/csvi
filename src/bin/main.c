@@ -8,7 +8,6 @@
 #include "matrix-presentation.h"
 #include "matrix-config.h"
 #include "helper.h"
-#include "logger.h"
 
 csv_contents *open_file = NULL;
 size_t selection_x = 0;
@@ -18,19 +17,6 @@ size_t top_x = 0;
 size_t top_y = 0;
 
 void up()
-{
-    if (selection_x > 0)
-    {
-        selection_x--;
-        matrix_presentation_flash();
-    }
-    else
-    {
-        matrix_presentation_beep();
-    }
-}
-
-void left()
 {
     if (selection_y > 0)
     {
@@ -43,11 +29,24 @@ void left()
     }
 }
 
+void left()
+{
+    if (selection_x > 0)
+    {
+        selection_x--;
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
 void right()
 {
-    if (selection_y < open_file->columns)
+    if (selection_x < open_file->columns - 1)
     {
-        selection_y++;
+        selection_x++;
         matrix_presentation_flash();
     }
     else
@@ -58,7 +57,7 @@ void right()
 
 void down()
 {
-    if (selection_y < open_file->lines)
+    if (selection_y < open_file->lines - 1)
     {
         selection_y++;
         matrix_presentation_flash();
@@ -71,7 +70,6 @@ void down()
 
 void paint()
 {
-    screen_config_t *scr_config = matrix_presentation_get_screen_config();
     matrix_properties_t m_properties = {.cell_padding_top = 0,
                                         .cell_padding_right = 2,
                                         .cell_padding_bottom = 0,
@@ -80,6 +78,7 @@ void paint()
                                         .margin_right = 1,
                                         .margin_bottom = 2,
                                         .margin_left = 1};
+    screen_config_t *scr_config = matrix_presentation_get_screen_config();
     csv_token *token = csv_reader_get_token(top_x, top_y, open_file);
     screen_config_t curr = {.width = 1, .height = 1};
     matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &curr);
@@ -90,7 +89,8 @@ void paint()
         if (token->x >= top_x && token->x < top_x + curr.width &&
             token->y >= top_y && token->y < top_y + curr.height)
         {
-            matrix_presentation_set_value(token->x - top_x, token->y - top_y, token->data, config);
+            coordinates_t position = {.x = token->x - top_x, .y = token->y - top_y};
+            matrix_presentation_set_value(&position, token->data, token->x == selection_x && token->y == selection_y, config, &m_properties);
         }
         token = token->next;
     }
@@ -106,16 +106,15 @@ int main(int argc, char *argv[])
     csv_token *curr = open_file->first;
     while (curr)
     {
-        log_info("Contents: (%d, %d) \"%d\"\n", curr->x, curr->y, curr->data);
         curr = curr->next;
     }
 
     matrix_presentation_init();
-    //matrix_presentation_configure_handler(UP, &up);
-    //matrix_presentation_configure_handler(LEFT, &left);
-    //matrix_presentation_configure_handler(RIGHT, &right);
-    //matrix_presentation_configure_handler(DOWN, &down);
-    //matrix_presentation_configure_handler(PAINT, &paint);
+    matrix_presentation_configure_handler(UP, &up);
+    matrix_presentation_configure_handler(LEFT, &left);
+    matrix_presentation_configure_handler(RIGHT, &right);
+    matrix_presentation_configure_handler(DOWN, &down);
+    matrix_presentation_configure_handler(PAINT, &paint);
     paint();
     matrix_presentation_handle();
     matrix_presentation_exit();

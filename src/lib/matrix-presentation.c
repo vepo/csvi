@@ -4,9 +4,8 @@
 #include <string.h>
 #include <curses.h>
 #include "helper.h"
-#include "logger.h"
 
-screen_config_t configuration;
+screen_config_t configuration = {.width = 0, .height = 0};
 
 typedef struct actions_config
 {
@@ -34,18 +33,29 @@ void matrix_presentation_init()
     initscr();
     start_color();
 
+    init_pair(SELECTED_CELL, COLOR_BLACK, COLOR_GREEN);
+    init_pair(EVEN_CELL, COLOR_BLACK, COLOR_WHITE);
+    init_pair(ODD_CELL, COLOR_WHITE, COLOR_BLACK);
+
     noecho();
     curs_set(0);
     timeout(0);
     cbreak();
+    keypad(stdscr, true);
     nodelay(stdscr, true);
-
-    getmaxyx(stdscr, configuration.height, configuration.width);
-    rectangle(0, 0, configuration.height - 2, configuration.width - 1);
 }
 
 screen_config_t *matrix_presentation_get_screen_config()
 {
+    screen_config_t curr_config;
+    getmaxyx(stdscr, curr_config.height, curr_config.width);
+    if (curr_config.width != configuration.width || curr_config.height != configuration.height)
+    {
+        configuration.width = curr_config.width;
+        configuration.height = curr_config.height;
+        rectangle(0, 0, configuration.height - 2, configuration.width - 1);
+    }
+
     return &configuration;
 }
 
@@ -109,32 +119,27 @@ void matrix_presentation_handle()
     while (true)
     {
         mp_repeaint();
-        char command[1024];
-        size_t command_length = 0;
-        command[command_length] = '\0';
-        char key = 0;
-        key = getch();
         void (*handler)() = NULL;
-        command[command_length++] = key;
-        if (strcmp(command, "\033A") == 0)
+        switch (getch())
         {
+        case KEY_UP:
             // code for arrow up
             handler = matrix_presentation_get_handler(UP);
-        }
-        else if (strcmp(command, "\033B") == 0)
-        {
+            break;
+        case KEY_DOWN:
             // code for arrow down
             handler = matrix_presentation_get_handler(DOWN);
-        }
-        else if (strcmp(command, "\033C") == 0)
-        {
+            break;
+        case KEY_RIGHT:
             // code for arrow right
             handler = matrix_presentation_get_handler(RIGHT);
-        }
-        else if (strcmp(command, "\033D") == 0)
-        {
+            break;
+        case KEY_LEFT:
             // code for arrow left
             handler = matrix_presentation_get_handler(LEFT);
+            break;
+        default:
+            break;
         }
 
         if (handler)
@@ -144,27 +149,108 @@ void matrix_presentation_handle()
     }
 }
 
-size_t calculate_offset(size_t pos, size_t *sizes)
+void calculate_offsets(coordinates_t *cell,
+                       matrix_config_t *config,
+                       matrix_properties_t *m_properties,
+                       coordinates_t *position)
 {
-    size_t curr = 0;
-    size_t offset = 0;
-    //log_info("Calculating: pos=%d...\n", pos);
-    while (curr < pos)
+    size_t curr_x = 0;
+    position->x = m_properties->margin_left;
+    size_t horizontal_padding = m_properties->cell_padding_right + m_properties->cell_padding_left;
+    size_t vertical_padding = m_properties->cell_padding_bottom + m_properties->cell_padding_top;
+    while (curr_x < cell->x)
     {
-        //  log_info("Add offset offset=%d size=%d\n", offset, sizes[curr]);
-        offset += sizes[curr] + 1;
-        curr++;
+        position->x += (curr_x > 0 ? horizontal_padding : 0) + config->column_width[curr_x];
+        ++curr_x;
     }
-    //log_info("Returning... offset=%d\n", offset);
-    return offset;
+
+    size_t curr_y = 0;
+    position->y = m_properties->margin_top;
+    while (curr_y < cell->y)
+    {
+        position->y += (curr_y > 0 ? vertical_padding : 0) + config->line_height[curr_y];
+        ++curr_y;
+    }
 }
 
-void matrix_presentation_set_value(size_t x, size_t y, char *data, matrix_config_t *config)
+void matrix_presentation_set_value(coordinates_t *cell,
+                                   char *data,
+                                   bool selected,
+                                   matrix_config_t *config,
+                                   matrix_properties_t *m_properties)
 {
     CHECK_FATAL_FN(!config, "Matrix no configured!\n", matrix_presentation_exit);
-    size_t offset_top = calculate_offset(y, config->line_height);
-    size_t offset_left = calculate_offset(x, config->column_width);
-    mvprintw(offset_top + 1, offset_left + 1, data);
+    coordinates_t position;
+    calculate_offsets(cell, config, m_properties, &position);
+    cell_info_t cell_info;
+
+    WINDOW *cell_scr = subwin(stdscr,
+                              config->line_height[cell->y] + m_properties->cell_padding_top + m_properties->cell_padding_bottom,
+                              config->column_width[cell->y] + m_properties->cell_padding_left + m_properties->cell_padding_right,
+                              position.y,
+                              position.x);
+    wclear(cell_scr);
+    if (selected)
+    {
+        wattron(cell_scr, COLOR_PAIR(SELECTED_CELL));
+        wbkgd(cell_scr, COLOR_PAIR(SELECTED_CELL));
+    }
+    else if (cell->x % 2 == 0)
+    {
+
+        if (cell->y % 2 == 0)
+        {
+            wattron(cell_scr, COLOR_PAIR(ODD_CELL));
+            wbkgd(cell_scr, COLOR_PAIR(ODD_CELL));
+        }
+        else
+        {
+            wattron(cell_scr, COLOR_PAIR(EVEN_CELL));
+            wbkgd(cell_scr, COLOR_PAIR(EVEN_CELL));
+        }
+    }
+    else
+    {
+        if (cell->y % 2 == 0)
+        {
+            wattron(cell_scr, COLOR_PAIR(EVEN_CELL));
+            wbkgd(cell_scr, COLOR_PAIR(EVEN_CELL));
+        }
+        else
+        {
+            wattron(cell_scr, COLOR_PAIR(ODD_CELL));
+            wbkgd(cell_scr, COLOR_PAIR(ODD_CELL));
+        }
+    }
+
+    
+
+    matrix_config_load_cell_info(data, &cell_info);
+    if (cell_info.height == 1)
+    {
+        mvwprintw(cell_scr, m_properties->cell_padding_top, m_properties->cell_padding_left, data);
+    }
+    else if (cell_info.height > 1)
+    {
+        size_t data_len = strlen(data);
+        char local_data[data_len];
+        strncpy(local_data, data, data_len);
+        char *token = strtok(local_data, "\n");
+        for (size_t line_index = 0; line_index < cell_info.height && token != NULL; ++line_index, token = strtok(NULL, "\n"))
+        {
+            mvwprintw(cell_scr, m_properties->cell_padding_top + line_index, m_properties->cell_padding_left, token);
+        }
+    }
+    delwin(cell_scr);
+
+    if (selected)
+    {
+        WINDOW *pos_scr = subwin(stdscr, 1, 9, configuration.height - 1, configuration.width - 10);
+        char str[11];
+        sprintf(str, "%03ld x %03ld", cell->x, cell->y);
+        mvwprintw(pos_scr, 0, 0, str);
+        delwin(pos_scr);
+    }
 }
 
 void matrix_presentation_exit()

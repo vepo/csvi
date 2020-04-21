@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "logger.h"
-
 matrix_config_t *matrix_config_initialize(size_t width, size_t height)
 {
     matrix_config_t *config = (matrix_config_t *)malloc(sizeof(matrix_config_t));
@@ -25,7 +23,7 @@ void matrix_config_dispose(matrix_config_t *config)
     }
 }
 
-void load_cell_info(char *cell_data, cell_info_t *cell_info)
+void matrix_config_load_cell_info(char *cell_data, cell_info_t *cell_info)
 {
     size_t cell_data_len = strlen(cell_data);
     cell_info->height = 1;
@@ -92,7 +90,7 @@ void matrix_config_get_most_expanded(screen_config_t *available, matrix_properti
         if (curr_token->x >= start_column && curr_token->y >= start_line)
         {
             cell_info_t cell_info;
-            load_cell_info(curr_token->data, &cell_info);
+            matrix_config_load_cell_info(curr_token->data, &cell_info);
 
             size_t offset_x = curr_token->x - start_column;
             if (widths[offset_x] < cell_info.width)
@@ -127,7 +125,7 @@ void matrix_config_load_sizes(csv_token *start_token, matrix_config_t *config)
     while (curr_token)
     {
         cell_info_t cell_info;
-        load_cell_info(curr_token->data, &cell_info);
+        matrix_config_load_cell_info(curr_token->data, &cell_info);
         if (curr_token->x >= start_token->x && curr_token->x < start_token->x + config->columns)
         {
             if (config->column_width[curr_token->x - start_token->x] < cell_info.width)

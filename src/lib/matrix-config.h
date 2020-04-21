@@ -17,6 +17,12 @@ typedef struct matrix_properties
     size_t margin_left;
 } matrix_properties_t;
 
+typedef struct coordinates
+{
+    size_t x;
+    size_t y;
+} coordinates_t;
+
 typedef struct cell_info
 {
     size_t width;
@@ -51,5 +57,8 @@ matrix_config_t *matrix_config_initialize(size_t width,
                                           size_t height);
 
 void matrix_config_dispose(matrix_config_t *config);
+
+void matrix_config_load_cell_info(char *cell_data, 
+                                  cell_info_t *cell_info);
 
 #endif
