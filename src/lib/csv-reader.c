@@ -79,7 +79,7 @@ size_t proceed_escaped_token(buffer_reader *reader, size_t *token_end)
             ++*token_end;
         }
     }
-    return escaped_counter;
+    return *token_end - escaped_counter;
 }
 
 csv_contents *csv_reader_read_file(char *path)
@@ -102,16 +102,15 @@ csv_contents *csv_reader_read_file(char *path)
             if (is_escaped)
             {
                 size_t token_end = 2;
-                size_t escaped_counter = proceed_escaped_token(reader, &token_end);
-                char *token = (char *)malloc(sizeof(char) * (token_end - escaped_counter));
-                scaped_counter = 0;
+                char *token = (char *)malloc(sizeof(char) * (proceed_escaped_token(reader, &token_end)));
+                size_t escaped_counter = 0;
                 bool in_scaped_char = false;
                 for (int bufferPos = 1, tokenPos = 0; bufferPos <= token_end; bufferPos++)
                 {
                     if (!in_scaped_char && buffer_reader_current_char(reader, bufferPos) == '"')
                     {
                         in_scaped_char = true;
-                        scaped_counter++;
+                        escaped_counter++;
                     }
                     else
                     {
@@ -119,7 +118,7 @@ csv_contents *csv_reader_read_file(char *path)
                         token[tokenPos++] = buffer_reader_current_char(reader, bufferPos);
                     }
                 }
-                token[token_end - scaped_counter - 1] = '\0';
+                token[token_end - escaped_counter - 1] = '\0';
                 csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
                 current_token->data = token;
                 current_token->x = column;
