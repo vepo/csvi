@@ -38,6 +38,7 @@ stamp-h1
 *.lo
 *.gcno
 *.gcda
+**/*.gcov
 config.guess
 config.sub
 ltmain.sh

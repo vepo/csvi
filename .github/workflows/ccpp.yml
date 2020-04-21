@@ -15,18 +15,25 @@ jobs:
       run: autoreconf -iv
     - name: Configure with Coverage
       run: ./configure --enable-coverage
+    - name: Configure Sonar
+      run: |
+      wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+      unzip build-wrapper-linux-x86.zip
+      wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
+      unzip sonar-scanner-cli-4.2.0.1873-linux.zip
     - name: Run Tests
       run: |
-        make clean
-        make check
-        make coverage-gcov
+        ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output make clean
+        ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output make check
+        for source_file in $(find src -name '*.c')
+        do
+            echo $source_file
+            cd $(dirname $source_file)
+            gcov $(basename $source_file)
+            cd -
+        done
     - name: Run Sonar
       run: |
-        wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
-        unzip build-wrapper-linux-x86.zip
-        ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output  make
-        wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
-        unzip sonar-scanner-cli-4.2.0.1873-linux.zip
         ./sonar-scanner-4.2.0.1873-linux/bin/sonar-scanner -Dsonar.organization=vepo-github \
                                                            -Dsonar.projectKey=csv-viewer \
                                                            -Dsonar.sources=. \
@@ -34,7 +41,7 @@ jobs:
                                                            -Dsonar.cfamily.build-wrapper-output=bw-output \
                                                            -Dsonar.branch.name=${BASE_BRANCH} \
                                                            -Dsonar.login=${SONAR_TOKEN} \
-                                                           -Dsonar.cfamily.gcov.reportsPath=coverage/*.gcov
+                                                           -Dsonar.cfamily.gcov.reportsPath=src/**/*.gcov
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
