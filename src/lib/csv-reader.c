@@ -102,7 +102,7 @@ csv_contents *csv_reader_read_file(char *path)
             if (is_escaped)
             {
                 size_t token_end = 2;
-                char *token = (char *)malloc(sizeof(char) * (proceed_escaped_token(reader, &token_end)));
+                char *token = (char *)malloc(sizeof(char) * proceed_escaped_token(reader, &token_end));
                 size_t escaped_counter = 0;
                 bool in_scaped_char = false;
                 for (int bufferPos = 1, tokenPos = 0; bufferPos <= token_end; bufferPos++)
