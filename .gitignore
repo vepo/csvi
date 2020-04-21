@@ -49,3 +49,4 @@ src/bin/csvviewer
 
 coverage-report
 coverage.info
+coverage

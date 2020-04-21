@@ -1,9 +1,7 @@
 if COVERAGE
   COVERAGE_CFLAG = -ftest-coverage -fprofile-arcs
-  COVERAGE_LDFLAG = -lgcov --coverage
 else
-  COVERAGE_CFLAG =
-  COVERAGE_LDFLAG = 
+  COVERAGE_CFLAG = 
 endif
 
 if DEBUG

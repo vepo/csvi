@@ -5,15 +5,11 @@
 
 #include "logger.h"
 
-typedef struct cell_info
-{
-    size_t width;
-    size_t height;
-} cell_info_t;
-
 matrix_config_t *matrix_config_initialize(size_t width, size_t height)
 {
     matrix_config_t *config = (matrix_config_t *)malloc(sizeof(matrix_config_t));
+    config->columns = width;
+    config->heights = height;
     config->column_width = (size_t *)calloc(width, sizeof(size_t));
     config->line_height = (size_t *)calloc(height, sizeof(size_t));
     return config;
@@ -21,9 +17,12 @@ matrix_config_t *matrix_config_initialize(size_t width, size_t height)
 
 void matrix_config_dispose(matrix_config_t *config)
 {
-    free(config->column_width);
-    free(config->line_height);
-    free(config);
+    if (config)
+    {
+        free(config->column_width);
+        free(config->line_height);
+        free(config);
+    }
 }
 
 void load_cell_info(char *cell_data, cell_info_t *cell_info)
@@ -122,42 +121,26 @@ void matrix_config_get_most_expanded(screen_config_t *available, matrix_properti
     }
 }
 
-size_t str_count_lines(char *data)
-{
-    size_t len = strlen(data);
-    size_t pos = 0;
-    size_t lines = 1;
-    while (pos < len)
-    {
-        if (data[pos] == '\n')
-        {
-            lines++;
-        }
-        pos++;
-    }
-    return lines;
-}
-
-void matrix_config_load(size_t width, size_t height, csv_token *start_token, matrix_config_t *config)
+void matrix_config_load_sizes(csv_token *start_token, matrix_config_t *config)
 {
     csv_token *curr_token = start_token;
-    if (curr_token)
+    while (curr_token)
     {
-        if (curr_token->x >= start_token->x && curr_token->x < start_token->x + width)
+        cell_info_t cell_info;
+        load_cell_info(curr_token->data, &cell_info);
+        if (curr_token->x >= start_token->x && curr_token->x < start_token->x + config->columns)
         {
-            size_t len = strlen(curr_token->data);
-            if (config->column_width[curr_token->x - start_token->x] < len)
+            if (config->column_width[curr_token->x - start_token->x] < cell_info.width)
             {
-                config->column_width[curr_token->x - start_token->x] = len;
+                config->column_width[curr_token->x - start_token->x] = cell_info.width;
             }
         }
 
-        if (curr_token->y >= start_token->y && curr_token->y < start_token->y + height)
+        if (curr_token->y >= start_token->y && curr_token->y < start_token->y + config->heights)
         {
-            size_t len = str_count_lines(curr_token->data);
-            if (config->line_height[curr_token->y - start_token->y] < len)
+            if (config->line_height[curr_token->y - start_token->y] < cell_info.height)
             {
-                config->line_height[curr_token->y - start_token->y] = len;
+                config->line_height[curr_token->y - start_token->y] = cell_info.height;
             }
         }
         curr_token = curr_token->next;

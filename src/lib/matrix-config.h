@@ -17,10 +17,18 @@ typedef struct matrix_properties
     size_t margin_left;
 } matrix_properties_t;
 
+typedef struct cell_info
+{
+    size_t width;
+    size_t height;
+} cell_info_t;
+
 typedef struct matrix_config
 {
     size_t *column_width;
     size_t *line_height;
+    size_t heights;
+    size_t columns;
 } matrix_config_t;
 
 typedef struct screen_config
@@ -29,9 +37,19 @@ typedef struct screen_config
     int height;
 } screen_config_t;
 
-void matrix_config_get_most_expanded(screen_config_t *available, matrix_properties_t *properties, csv_token *start_token, size_t max_lines, size_t max_columns, screen_config_t *used);
-void matrix_config_load(size_t width, size_t height, csv_token *start_token, matrix_config_t *config);
-matrix_config_t *matrix_config_initialize(size_t width, size_t height);
+void matrix_config_get_most_expanded(screen_config_t *available,
+                                     matrix_properties_t *properties,
+                                     csv_token *start_token,
+                                     size_t max_lines,
+                                     size_t max_columns,
+                                     screen_config_t *used);
+
+void matrix_config_load_sizes(csv_token *start_token,
+                              matrix_config_t *config);
+
+matrix_config_t *matrix_config_initialize(size_t width,
+                                          size_t height);
+
 void matrix_config_dispose(matrix_config_t *config);
 
 #endif

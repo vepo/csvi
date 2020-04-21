@@ -7,10 +7,17 @@
 
 START_TEST(test_matrix_initialization)
 {
-    matrix_config_t *config = matrix_config_initialize(10, 10);
+    matrix_config_t *config = matrix_config_initialize(10, 20);
+    ck_assert_int_eq(config->columns, 10);
+    ck_assert_int_eq(config->heights, 20);
+
     for (size_t index = 0; index < 10; ++index)
     {
         ck_assert_int_eq(0, config->column_width[index]);
+    }
+
+    for (size_t index = 0; index < 20; ++index)
+    {
         ck_assert_int_eq(0, config->line_height[index]);
     }
     matrix_config_dispose(config);
@@ -124,6 +131,35 @@ START_TEST(test_matrix_expansion_bigger)
 }
 END_TEST
 
+START_TEST(test_matrix_load_size)
+{
+    matrix_config_t *config = matrix_config_initialize(4, 3);
+    csv_token *contents = mock_token(0, 0, "cell 0,0", NULL);
+    mock_token(0, 1, "cell 0,1", contents);
+    mock_token(0, 2, "cell 0,2", contents);
+    mock_token(0, 3, "cell 0,3", contents);
+    mock_token(1, 0, "cell 1,0", contents);
+    mock_token(1, 1, "cell\nwith large content!...........", contents);
+    mock_token(1, 2, "cell 1,2", contents);
+    mock_token(1, 3, "cell 1,3", contents);
+    mock_token(2, 0, "0\n1\n2\n3\n4", contents);
+    mock_token(2, 1, "cell 2,1", contents);
+    mock_token(2, 2, "cell 2,2", contents);
+    mock_token(2, 3, "cell 2,3", contents);
+
+    matrix_config_load_sizes(contents, config);
+    ck_assert_int_eq(8, config->column_width[0]);
+    ck_assert_int_eq(30, config->column_width[1]);
+    ck_assert_int_eq(8, config->column_width[2]);
+    ck_assert_int_eq(8, config->column_width[3]);
+
+    ck_assert_int_eq(1, config->line_height[0]);
+    ck_assert_int_eq(2, config->line_height[1]);
+    ck_assert_int_eq(5, config->line_height[2]);
+    matrix_config_dispose(config);
+}
+END_TEST
+
 Suite *matrix_test_suite(void)
 {
     Suite *s = suite_create("Matrix");
@@ -132,6 +168,7 @@ Suite *matrix_test_suite(void)
     tcase_add_test(tc_core, test_matrix_initialization);
     tcase_add_test(tc_core, test_matrix_expansion_lower);
     tcase_add_test(tc_core, test_matrix_expansion_bigger);
+    tcase_add_test(tc_core, test_matrix_load_size);
 
     suite_add_tcase(s, tc_core);
     return s;

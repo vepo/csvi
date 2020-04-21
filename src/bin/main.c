@@ -84,11 +84,9 @@ void paint()
     screen_config_t curr = {.width = 1, .height = 1};
     matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &curr);
     matrix_config_t *config = matrix_config_initialize(curr.width, curr.height);
-    matrix_config_load(curr.width, curr.height, token, config);
-    //log_info("Initializing...\n");
+    matrix_config_load_sizes(token, config);
     while (token)
     {
-        //  log_info("Token (%d, %d)\n", token->x, token->y);
         if (token->x >= top_x && token->x < top_x + curr.width &&
             token->y >= top_y && token->y < top_y + curr.height)
         {

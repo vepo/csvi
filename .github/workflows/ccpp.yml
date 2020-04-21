@@ -13,8 +13,13 @@ jobs:
       run: sudo apt-get update && sudo apt install -y libncurses5-dev libncursesw5-dev pkg-config check unzip
     - name: reconf
       run: autoreconf -iv
-    - name: configure
-      run: ./configure
+    - name: Configure with Coverage
+      run: ./configure --enable-coverage
+    - name: Run Tests
+      run: |
+        make clean
+        make check
+        make coverage-gcov
     - name: Run Sonar
       run: |
         wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
@@ -28,7 +33,8 @@ jobs:
                                                            -Dsonar.host.url=https://sonarcloud.io \
                                                            -Dsonar.cfamily.build-wrapper-output=bw-output \
                                                            -Dsonar.branch.name=${BASE_BRANCH} \
-                                                           -Dsonar.login=${SONAR_TOKEN}
+                                                           -Dsonar.login=${SONAR_TOKEN} \
+                                                           -Dsonar.cfamily.gcov.reportsPath=coverage/*.gcov
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

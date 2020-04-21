@@ -164,7 +164,6 @@ void matrix_presentation_set_value(size_t x, size_t y, char *data, matrix_config
     CHECK_FATAL_FN(!config, "Matrix no configured!\n", matrix_presentation_exit);
     size_t offset_top = calculate_offset(y, config->line_height);
     size_t offset_left = calculate_offset(x, config->column_width);
-    //log_info("x=%d y=%d top=%d left=%d\n", x, y, offset_top, offset_left);
     mvprintw(offset_top + 1, offset_left + 1, data);
 }
 
