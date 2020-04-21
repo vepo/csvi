@@ -18,7 +18,7 @@ typedef struct csv_contents
 } csv_contents;
 
 csv_contents *csv_reader_read_file(char *path);
-csv_token *csv_reader_get_token(size_t x, size_t y, csv_contents *contents);
+csv_token *csv_reader_get_token(size_t x, size_t y, const csv_contents *contents);
 void csv_contents_dispose(csv_contents *);
 void csv_token_dispose(csv_token *);
 
