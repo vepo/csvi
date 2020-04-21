@@ -82,6 +82,27 @@ size_t proceed_escaped_token(buffer_reader *reader, size_t *token_end)
     return *token_end - escaped_counter;
 }
 
+void read_escaped_token(buffer_reader *reader, size_t token_end, char *token)
+{
+    size_t escaped_counter = 0;
+    bool in_scaped_char = false;
+    // the buffer[0] is the double quote (")
+    for (int buffer_pos = 0; buffer_pos < token_end; buffer_pos++)
+    {
+        if (!in_scaped_char && buffer_reader_current_char(reader, buffer_pos + 1) == '"')
+        {
+            in_scaped_char = true;
+            escaped_counter++;
+        }
+        else
+        {
+            in_scaped_char = false;
+            token[buffer_pos - escaped_counter] = buffer_reader_current_char(reader, buffer_pos + 1);
+        }
+    }
+    token[token_end - escaped_counter - 1] = '\0';
+}
+
 csv_contents *csv_reader_read_file(char *path)
 {
     csv_contents *contents = (csv_contents *)malloc(sizeof(csv_contents));
@@ -103,22 +124,8 @@ csv_contents *csv_reader_read_file(char *path)
             {
                 size_t token_end = 2;
                 char *token = (char *)malloc(sizeof(char) * proceed_escaped_token(reader, &token_end));
-                size_t escaped_counter = 0;
-                bool in_scaped_char = false;
-                for (int bufferPos = 1, tokenPos = 0; bufferPos <= token_end; bufferPos++)
-                {
-                    if (!in_scaped_char && buffer_reader_current_char(reader, bufferPos) == '"')
-                    {
-                        in_scaped_char = true;
-                        escaped_counter++;
-                    }
-                    else
-                    {
-                        in_scaped_char = false;
-                        token[tokenPos++] = buffer_reader_current_char(reader, bufferPos);
-                    }
-                }
-                token[token_end - escaped_counter - 1] = '\0';
+                read_escaped_token(reader, token_end, token);
+
                 csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
                 current_token->data = token;
                 current_token->x = column;
