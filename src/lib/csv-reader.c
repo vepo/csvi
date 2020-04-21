@@ -32,13 +32,13 @@ void proceed_token(csv_contents *contents, csv_token *current_token, csv_token *
     if (last_token)
     {
         last_token->next = current_token;
-        last_token = current_token;
     }
     else
     {
-        last_token = contents->first = current_token;
+        contents->first = current_token;
     }
 }
+
 size_t process_end_of_token(buffer_reader *reader, size_t current_pos, size_t curr_column, csv_contents *contents)
 {
     size_t column = curr_column;
@@ -55,6 +55,31 @@ size_t process_end_of_token(buffer_reader *reader, size_t current_pos, size_t cu
 
     buffer_reader_commit(reader, current_pos + 1);
     return column;
+}
+
+size_t proceed_escaped_token(buffer_reader *reader, size_t *token_end)
+{
+    size_t escaped_counter = 0;
+    while ((buffer_reader_available(reader) > *token_end + 1))
+    {
+        if (buffer_reader_current_char(reader, *token_end) == '"' && buffer_reader_current_char(reader, *token_end + 1) == '"')
+        {
+            *token_end += 2;
+            escaped_counter++;
+            continue;
+        }
+
+        if (buffer_reader_current_char(reader, *token_end) == '"')
+        {
+            ++*token_end;
+            break;
+        }
+        else
+        {
+            ++*token_end;
+        }
+    }
+    return escaped_counter;
 }
 
 csv_contents *csv_reader_read_file(char *path)
@@ -77,27 +102,8 @@ csv_contents *csv_reader_read_file(char *path)
             if (is_escaped)
             {
                 size_t token_end = 2;
-                size_t scaped_counter = 0;
-                while ((buffer_reader_available(reader) > token_end + 1))
-                {
-                    if (buffer_reader_current_char(reader, token_end) == '"' && buffer_reader_current_char(reader, token_end + 1) == '"')
-                    {
-                        token_end += 2;
-                        scaped_counter++;
-                        continue;
-                    }
-
-                    if (buffer_reader_current_char(reader, token_end) == '"')
-                    {
-                        ++token_end;
-                        break;
-                    }
-                    else
-                    {
-                        ++token_end;
-                    }
-                }
-                char *token = (char *)malloc(sizeof(char) * (token_end - scaped_counter));
+                size_t escaped_counter = proceed_escaped_token(reader, &token_end);
+                char *token = (char *)malloc(sizeof(char) * (token_end - escaped_counter));
                 scaped_counter = 0;
                 bool in_scaped_char = false;
                 for (int bufferPos = 1, tokenPos = 0; bufferPos <= token_end; bufferPos++)
