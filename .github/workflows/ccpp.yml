@@ -39,8 +39,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         BASE_BRANCH: ${{ github.base_ref }}
-    - name: make
-      run: make
+    - name: Configure
+      run: ./configure
+    - name: Clean & Make
+      run: |
+        make clean
+        make
     - name: make check
       run: make check
     - name: make dist
