@@ -17,11 +17,13 @@ else
 endif
 
 noinst_LIBRARIES = libmock.a
-noinst_HEADERS = mock-token.h
+noinst_HEADERS = mock-token.h \
+                 test-resources.h
 
 libmock_a_SOURCES = \
                     $(libmock_a_HEADERS) \
-                    mock-token.c
+                    mock-token.c \
+                    test-resources.c
 
 ## Tests Rules
 

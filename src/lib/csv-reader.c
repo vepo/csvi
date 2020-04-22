@@ -113,67 +113,77 @@ csv_contents *csv_reader_read_file(char *path)
     buffer_reader *reader = buffer_reader_open(path);
 
     size_t column = 0;
-    bool is_escaped = false;
+
     while (buffer_reader_acquire(reader))
     {
         while (buffer_reader_has_data(reader))
         {
             commit_while_isspace(reader);
-            is_escaped = buffer_reader_current_char(reader, 0) == '"';
-            if (is_escaped)
+            if (buffer_reader_has_data(reader))
             {
-                size_t token_end = 2;
-                char *token = (char *)malloc(sizeof(char) * proceed_escaped_token(reader, &token_end));
-                read_escaped_token(reader, token_end, token);
-
-                csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
-                current_token->data = token;
-                current_token->x = column;
-                current_token->y = contents->lines;
-                current_token->next = NULL;
-
-                if (buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != ';')
+                if (buffer_reader_current_char(reader, 0) == '"')
                 {
-                    token_end++;
+                    size_t token_end = 2;
+                    char *token = (char *)malloc(sizeof(char) * proceed_escaped_token(reader, &token_end));
+                    read_escaped_token(reader, token_end, token);
+
+                    csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
+                    current_token->data = token;
+                    current_token->x = column;
+                    current_token->y = contents->lines;
+                    current_token->next = NULL;
+
+                    if (buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != ';')
+                    {
+                        token_end++;
+                    }
+                    while (buffer_reader_available(reader) > token_end && isspace(buffer_reader_current_char(reader, token_end)) && buffer_reader_current_char(reader, token_end) != '\n')
+                    {
+                        ++token_end;
+                    };
+                    while (buffer_reader_available(reader) > token_end && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
+                    {
+                        ++token_end;
+                    };
+                    column = process_end_of_token(reader, token_end, column, contents);
+                    proceed_token(contents, current_token, last_token);
+                    last_token = current_token;
                 }
-                while (buffer_reader_available(reader) > token_end && isspace(buffer_reader_current_char(reader, token_end)) && buffer_reader_current_char(reader, token_end) != '\n')
+                else
                 {
-                    ++token_end;
-                };
-                while (buffer_reader_available(reader) > token_end && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
-                {
-                    ++token_end;
-                };
-                column = process_end_of_token(reader, token_end, column, contents);
-                proceed_token(contents, current_token, last_token);
-                last_token = current_token;
-            }
-            else
-            {
-                size_t token_end = 0;
-                while ((buffer_reader_available(reader) > token_end || !reader->endReached) && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
-                {
-                    ++token_end;
-                };
+                    size_t token_end = 0;
+                    while ((buffer_reader_available(reader) > token_end || !reader->endReached) && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
+                    {
+                        ++token_end;
+                    };
 
-                int space_pos = count_spaces_previous(reader, token_end);
+                    int space_pos = count_spaces_previous(reader, token_end);
 
-                char *token = (char *)malloc(sizeof(char) * (token_end + 1 - space_pos));
-                buffer_reader_current_copy(reader, token_end + 1 - space_pos, token);
-                csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
-                current_token->data = token;
-                current_token->x = column;
-                current_token->y = contents->lines;
-                current_token->next = NULL;
-                column = process_end_of_token(reader, token_end, column, contents);
-                proceed_token(contents, current_token, last_token);
-                last_token = current_token;
+                    char *token = (char *)malloc(sizeof(char) * (token_end + 1 - space_pos));
+                    buffer_reader_current_copy(reader, token_end + 1 - space_pos, token);
+                    csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
+                    current_token->data = token;
+                    current_token->x = column;
+                    current_token->y = contents->lines;
+                    current_token->next = NULL;
+                    column = process_end_of_token(reader, token_end, column, contents);
+                    proceed_token(contents, current_token, last_token);
+                    last_token = current_token;
+                }
             }
         }
     }
-
+    contents->columns = 0;
+    contents->lines = 0;
     if (contents->first)
     {
+        csv_token *last_token = contents->first;
+        while (last_token->next)
+        {
+            contents->columns = MAX(contents->columns, last_token->x);
+            contents->lines = MAX(contents->lines, last_token->y);
+            last_token = last_token->next;
+        }
         contents->columns++;
         contents->lines++;
     }
