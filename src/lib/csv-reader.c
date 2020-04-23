@@ -65,11 +65,10 @@ size_t proceed_escaped_token(buffer_reader *reader, size_t *token_end)
         if (buffer_reader_current_char(reader, *token_end) == '"' && buffer_reader_current_char(reader, *token_end + 1) == '"')
         {
             *token_end += 2;
-            escaped_counter++;
+            ++escaped_counter;
             continue;
         }
-
-        if (buffer_reader_current_char(reader, *token_end) == '"')
+        else if (buffer_reader_current_char(reader, *token_end) == '"')
         {
             ++*token_end;
             break;
@@ -79,28 +78,24 @@ size_t proceed_escaped_token(buffer_reader *reader, size_t *token_end)
             ++*token_end;
         }
     }
-    return *token_end - escaped_counter;
+    return *token_end - escaped_counter - 2; // remove quotes
 }
 
-void read_escaped_token(buffer_reader *reader, size_t token_end, char *token)
+char *read_escaped_token(buffer_reader *reader, size_t token_end, size_t token_size)
 {
-    size_t escaped_counter = 0;
-    bool in_scaped_char = false;
-    // the buffer[0] is the double quote (")
-    for (int buffer_pos = 0; buffer_pos < token_end; buffer_pos++)
+    char *token = (char *)malloc(sizeof(char) * token_size + 1);
+    // the buffer[0] is the double quote ("), this is why always add 1
+    size_t escaped_chars = 0;
+    for (int buffer_pos = 0; buffer_pos < token_size; buffer_pos++)
     {
-        if (!in_scaped_char && buffer_reader_current_char(reader, buffer_pos + 1) == '"')
+        if (buffer_reader_current_char(reader, buffer_pos + 1 + escaped_chars) == '"' && buffer_reader_current_char(reader, buffer_pos + 2 + escaped_chars) == '"')
         {
-            in_scaped_char = true;
-            escaped_counter++;
+            ++escaped_chars;
         }
-        else
-        {
-            in_scaped_char = false;
-            token[buffer_pos - escaped_counter] = buffer_reader_current_char(reader, buffer_pos + 1);
-        }
+        token[buffer_pos] = buffer_reader_current_char(reader, buffer_pos + 1 + escaped_chars);
     }
-    token[token_end - escaped_counter - 1] = '\0';
+    token[token_size] = '\0';
+    return token;
 }
 
 csv_contents *csv_reader_read_file(char *path)
@@ -124,8 +119,7 @@ csv_contents *csv_reader_read_file(char *path)
                 if (buffer_reader_current_char(reader, 0) == '"')
                 {
                     size_t token_end = 2;
-                    char *token = (char *)malloc(sizeof(char) * proceed_escaped_token(reader, &token_end));
-                    read_escaped_token(reader, token_end, token);
+                    char *token = read_escaped_token(reader, token_end, proceed_escaped_token(reader, &token_end));
 
                     csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
                     current_token->data = token;

@@ -90,6 +90,7 @@ void paint()
             token->y >= top_y && token->y < top_y + curr.height)
         {
             coordinates_t position = {.x = token->x - top_x, .y = token->y - top_y};
+            LOGGER_INFO("SET (%ld, %ld)\n", position.x, position.y)
             matrix_presentation_set_value(&position, token->data, token->x == selection_x && token->y == selection_y, config, &m_properties);
         }
         token = token->next;
@@ -115,7 +116,6 @@ int main(int argc, char *argv[])
     matrix_presentation_configure_handler(RIGHT, &right);
     matrix_presentation_configure_handler(DOWN, &down);
     matrix_presentation_configure_handler(PAINT, &paint);
-    paint();
     matrix_presentation_handle();
     matrix_presentation_exit();
     return 0;

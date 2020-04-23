@@ -53,6 +53,7 @@ screen_config_t *matrix_presentation_get_screen_config()
     {
         configuration.width = curr_config.width;
         configuration.height = curr_config.height;
+        clear();
         rectangle(0, 0, configuration.height - 2, configuration.width - 1);
     }
 
@@ -116,27 +117,31 @@ void mp_repeaint()
 
 void matrix_presentation_handle()
 {
+    mp_repeaint();
     while (true)
     {
-        mp_repeaint();
         void (*handler)() = NULL;
         switch (getch())
         {
         case KEY_UP:
             // code for arrow up
             handler = matrix_presentation_get_handler(UP);
+            LOGGER_INFO("Detected: KEY UP\n");
             break;
         case KEY_DOWN:
             // code for arrow down
             handler = matrix_presentation_get_handler(DOWN);
+            LOGGER_INFO("Detected: KEY DOWN\n");
             break;
         case KEY_RIGHT:
             // code for arrow right
             handler = matrix_presentation_get_handler(RIGHT);
+            LOGGER_INFO("Detected: KEY RIGHT\n");
             break;
         case KEY_LEFT:
             // code for arrow left
             handler = matrix_presentation_get_handler(LEFT);
+            LOGGER_INFO("Detected: KEY LEFT\n");
             break;
         default:
             break;
@@ -145,6 +150,7 @@ void matrix_presentation_handle()
         if (handler)
         {
             (*handler)();
+            mp_repeaint();
         }
     }
 }
@@ -156,11 +162,11 @@ void calculate_offsets(coordinates_t *cell,
 {
     size_t curr_x = 0;
     position->x = m_properties->margin_left;
-    size_t horizontal_padding = m_properties->cell_padding_right + m_properties->cell_padding_left;
-    size_t vertical_padding = m_properties->cell_padding_bottom + m_properties->cell_padding_top;
+    size_t cell_horizontal_padding = m_properties->cell_padding_left + m_properties->cell_padding_right;
+    size_t cell_vertical_padding = m_properties->cell_padding_top + m_properties->cell_padding_bottom;
     while (curr_x < cell->x)
     {
-        position->x += (curr_x > 0 ? horizontal_padding : 0) + config->column_width[curr_x];
+        position->x += cell_horizontal_padding + config->column_width[curr_x];
         ++curr_x;
     }
 
@@ -168,7 +174,7 @@ void calculate_offsets(coordinates_t *cell,
     position->y = m_properties->margin_top;
     while (curr_y < cell->y)
     {
-        position->y += (curr_y > 0 ? vertical_padding : 0) + config->line_height[curr_y];
+        position->y += cell_vertical_padding + config->line_height[curr_y];
         ++curr_y;
     }
 }
@@ -179,20 +185,20 @@ void matrix_presentation_set_value(coordinates_t *cell,
                                    matrix_config_t *config,
                                    matrix_properties_t *m_properties)
 {
-    CHECK_FATAL_FN(!config, "Matrix no configured!\n", matrix_presentation_exit);
+    CHECK_FATAL_FN(!config, "Matrix not configured!\n", matrix_presentation_exit);
     coordinates_t position;
     calculate_offsets(cell, config, m_properties, &position);
-    cell_info_t cell_info;
+
+    LOGGER_INFO("Wrinting (%ld, %ld) in (%ld, %ld) with (%ld, %ld)\n", cell->x, cell->y, position.x, position.y, config->column_width[cell->x], config->line_height[cell->y]);
 
     WINDOW *cell_scr = subwin(stdscr,
-                              config->line_height[cell->y] + m_properties->cell_padding_top + m_properties->cell_padding_bottom,
-                              config->column_width[cell->y] + m_properties->cell_padding_left + m_properties->cell_padding_right,
+                              m_properties->cell_padding_top + config->line_height[cell->y] + m_properties->cell_padding_bottom,
+                              m_properties->cell_padding_left + config->column_width[cell->x] + m_properties->cell_padding_right,
                               position.y,
                               position.x);
     wclear(cell_scr);
     if (selected)
     {
-        wattron(cell_scr, COLOR_PAIR(SELECTED_CELL));
         wbkgd(cell_scr, COLOR_PAIR(SELECTED_CELL));
     }
     else if (cell->x % 2 == 0)
@@ -200,12 +206,10 @@ void matrix_presentation_set_value(coordinates_t *cell,
 
         if (cell->y % 2 == 0)
         {
-            wattron(cell_scr, COLOR_PAIR(ODD_CELL));
             wbkgd(cell_scr, COLOR_PAIR(ODD_CELL));
         }
         else
         {
-            wattron(cell_scr, COLOR_PAIR(EVEN_CELL));
             wbkgd(cell_scr, COLOR_PAIR(EVEN_CELL));
         }
     }
@@ -213,18 +217,15 @@ void matrix_presentation_set_value(coordinates_t *cell,
     {
         if (cell->y % 2 == 0)
         {
-            wattron(cell_scr, COLOR_PAIR(EVEN_CELL));
             wbkgd(cell_scr, COLOR_PAIR(EVEN_CELL));
         }
         else
         {
-            wattron(cell_scr, COLOR_PAIR(ODD_CELL));
             wbkgd(cell_scr, COLOR_PAIR(ODD_CELL));
         }
     }
 
-    
-
+    cell_info_t cell_info;
     matrix_config_load_cell_info(data, &cell_info);
     if (cell_info.height == 1)
     {
@@ -232,13 +233,20 @@ void matrix_presentation_set_value(coordinates_t *cell,
     }
     else if (cell_info.height > 1)
     {
-        size_t data_len = strlen(data);
-        char local_data[data_len];
-        strncpy(local_data, data, data_len);
-        char *token = strtok(local_data, "\n");
-        for (size_t line_index = 0; line_index < cell_info.height && token != NULL; ++line_index, token = strtok(NULL, "\n"))
+        size_t start_line = 0;
+        for (size_t line_index = 0; line_index < cell_info.height; ++line_index)
         {
-            mvwprintw(cell_scr, m_properties->cell_padding_top + line_index, m_properties->cell_padding_left, token);
+            char buffer[strlen(data)];
+            size_t end_line = 0;
+            while (data[start_line + end_line] != '\n')
+            {
+                buffer[end_line] = data[start_line + end_line];
+                ++end_line;
+            }
+            buffer[end_line] = '\0';
+
+            mvwprintw(cell_scr, m_properties->cell_padding_top + line_index, m_properties->cell_padding_left, buffer);
+            start_line = end_line + 1;
         }
     }
     delwin(cell_scr);

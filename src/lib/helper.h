@@ -18,4 +18,11 @@
         exit(-1);                       \
     }
 
+#define LOGGER_INFO(message, ...)                       \
+    if (false)                                          \
+    {                                                   \
+        FILE *logger_fp = fopen("csvviewer.log", "a+"); \
+        fprintf(logger_fp, message, ##__VA_ARGS__);     \
+        fclose(logger_fp);                              \
+    }
 #endif
