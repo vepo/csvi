@@ -65,7 +65,7 @@ bool can_show(screen_config_t *available, matrix_properties_t *properties, size_
     {
         available_height -= heights[index] + properties->cell_padding_top + properties->cell_padding_bottom;
     }
-    return available_width >= 0 && available_height >= 0;
+    return available_width > 0 && available_height >= 0;
 }
 
 void matrix_config_get_most_expanded(screen_config_t *available,

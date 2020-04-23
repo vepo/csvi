@@ -9,8 +9,8 @@
 #include "matrix-config.h"
 #include "helper.h"
 
-screen_config_t current_screen = {.width = 1,
-                                  .height = 1};
+screen_config_t last_screen = {.width = 1,
+                               .height = 1};
 
 matrix_properties_t m_properties = {.cell_padding_top = 0,
                                     .cell_padding_right = 2,
@@ -21,22 +21,24 @@ matrix_properties_t m_properties = {.cell_padding_top = 0,
                                     .margin_bottom = 2,
                                     .margin_left = 1};
 csv_contents *open_file = NULL;
-size_t selection_x = 0;
-size_t selection_y = 0;
 
-size_t top_x = 0;
-size_t top_y = 0;
+coordinates_t top_cell = {.x = 0,
+                          .y = 0};
+
+coordinates_t selected_cell = {.x = 0,
+                               .y = 0};
 
 void up()
 {
-    if (top_y > 0 && selection_y == top_y)
+    if (top_cell.y > 0 && selected_cell.y == top_cell.y)
     {
-        top_y--;
+        top_cell.y--;
     }
 
-    if (selection_y > 0)
+    if (selected_cell.y > 0)
     {
-        selection_y--;
+        selected_cell.y--;
+        matrix_presentation_set_selected(&selected_cell);
         matrix_presentation_flash();
     }
     else
@@ -47,14 +49,15 @@ void up()
 
 void left()
 {
-    if (top_x > 0 && selection_x == top_x)
+    if (top_cell.x > 0 && selected_cell.x == top_cell.x)
     {
-        top_x--;
+        top_cell.x--;
     }
 
-    if (selection_x > 0)
+    if (selected_cell.x > 0)
     {
-        selection_x--;
+        selected_cell.x--;
+        matrix_presentation_set_selected(&selected_cell);
         matrix_presentation_flash();
     }
     else
@@ -65,14 +68,15 @@ void left()
 
 void right()
 {
-    if (top_x < open_file->columns - 1 && selection_x == current_screen.width + top_x)
+    if (top_cell.x < open_file->columns - 1 && last_screen.width + top_cell.x - 1 == selected_cell.x + 1)
     {
-        top_x++;
+        top_cell.x++;
     }
 
-    if (selection_x < open_file->columns - 1)
+    if (selected_cell.x < open_file->columns - 1)
     {
-        selection_x++;
+        selected_cell.x++;
+        matrix_presentation_set_selected(&selected_cell);
         matrix_presentation_flash();
     }
     else
@@ -83,14 +87,15 @@ void right()
 
 void down()
 {
-    if (top_y < open_file->lines && selection_y + 1 >= current_screen.height + top_y)
+    if (top_cell.y < open_file->lines && selected_cell.y + 1 >= last_screen.height + top_cell.y)
     {
-        top_y++;
+        top_cell.y++;
     }
 
-    if (selection_y < open_file->lines - 1)
+    if (selected_cell.y < open_file->lines - 1)
     {
-        selection_y++;
+        selected_cell.y++;
+        matrix_presentation_set_selected(&selected_cell);
         matrix_presentation_flash();
     }
     else
@@ -102,18 +107,53 @@ void down()
 void paint()
 {
     screen_config_t *scr_config = matrix_presentation_get_screen_config();
-    csv_token *token = csv_reader_get_token(top_x, top_y, open_file);
+    csv_token *token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
+    screen_config_t current_screen = {.width = 1,
+                                      .height = 1};
     matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &current_screen);
+
+    if (current_screen.height != last_screen.height || current_screen.width != last_screen.width)
+    {
+        matrix_presentation_refresh(&m_properties);
+        last_screen.height = current_screen.height;
+        last_screen.width = current_screen.width;
+        matrix_presentation_set_selected(&selected_cell);
+    }
+
+    if (selected_cell.x == last_screen.width + top_cell.x)
+    {
+        top_cell.x += 2;
+        matrix_presentation_refresh(&m_properties);
+        matrix_presentation_set_selected(&selected_cell);
+        token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
+        current_screen.width = 1;
+        current_screen.height = 1;
+        matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &current_screen);
+
+        if (current_screen.height != last_screen.height || current_screen.width != last_screen.width)
+        {
+            matrix_presentation_refresh(&m_properties);
+            matrix_presentation_set_selected(&selected_cell);
+            last_screen.height = current_screen.height;
+            last_screen.width = current_screen.width;
+        }
+    }
+
     matrix_config_t *config = matrix_config_initialize(current_screen.width, current_screen.height);
     matrix_config_load_sizes(token, config);
     while (token)
     {
-        if (token->x >= top_x && token->x < top_x + current_screen.width &&
-            token->y >= top_y && token->y < top_y + current_screen.height)
+        if (token->x >= top_cell.x && token->x < top_cell.x + current_screen.width &&
+            token->y >= top_cell.y && token->y < top_cell.y + current_screen.height)
         {
-            coordinates_t position = {.x = token->x - top_x, .y = token->y - top_y};
-            LOGGER_INFO("SET (%ld, %ld)\n", position.x, position.y)
-            matrix_presentation_set_value(&position, token->data, token->x == selection_x && token->y == selection_y, config, &m_properties);
+            coordinates_t position = {.x = token->x - top_cell.x,
+                                      .y = token->y - top_cell.y};
+            matrix_presentation_set_value(&position, token->data, token->x == selected_cell.x && token->y == selected_cell.y, config, &m_properties);
+        }
+        else if (token->x > top_cell.x + current_screen.width &&
+                 token->y > top_cell.y + current_screen.height)
+        {
+            break;
         }
         token = token->next;
     }

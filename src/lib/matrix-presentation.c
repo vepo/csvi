@@ -53,8 +53,6 @@ screen_config_t *matrix_presentation_get_screen_config()
     {
         configuration.width = curr_config.width;
         configuration.height = curr_config.height;
-        clear();
-        rectangle(0, 0, configuration.height - 2, configuration.width - 1);
     }
 
     return &configuration;
@@ -113,6 +111,12 @@ void mp_repeaint()
         handler();
         refresh();
     }
+}
+
+void matrix_presentation_refresh(matrix_properties_t *m_properties)
+{
+    clear();
+    rectangle(0, 0, configuration.height - m_properties->margin_bottom, configuration.width - m_properties->margin_right);
 }
 
 void matrix_presentation_handle()
@@ -189,7 +193,7 @@ void matrix_presentation_set_value(coordinates_t *cell,
     coordinates_t position;
     calculate_offsets(cell, config, m_properties, &position);
 
-    LOGGER_INFO("Wrinting (%ld, %ld) in (%ld, %ld) with (%ld, %ld)\n", cell->x, cell->y, position.x, position.y, config->column_width[cell->x], config->line_height[cell->y]);
+    //LOGGER_INFO("Wrinting (%ld, %ld) in (%ld, %ld) with (%ld, %ld)\n", cell->x, cell->y, position.x, position.y, config->column_width[cell->x], config->line_height[cell->y]);
 
     WINDOW *cell_scr = subwin(stdscr,
                               m_properties->cell_padding_top + config->line_height[cell->y] + m_properties->cell_padding_bottom,
@@ -250,15 +254,15 @@ void matrix_presentation_set_value(coordinates_t *cell,
         }
     }
     delwin(cell_scr);
+}
 
-    if (selected)
-    {
-        WINDOW *pos_scr = subwin(stdscr, 1, 9, configuration.height - 1, configuration.width - 10);
-        char str[11];
-        sprintf(str, "%03ld x %03ld", cell->x, cell->y);
-        mvwprintw(pos_scr, 0, 0, str);
-        delwin(pos_scr);
-    }
+void matrix_presentation_set_selected(coordinates_t *cell)
+{
+    WINDOW *pos_scr = subwin(stdscr, 1, 9, configuration.height - 1, configuration.width - 10);
+    char str[11];
+    sprintf(str, "%03ld x %03ld", cell->x, cell->y);
+    mvwprintw(pos_scr, 0, 0, str);
+    delwin(pos_scr);
 }
 
 void matrix_presentation_exit()
