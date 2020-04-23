@@ -1,0 +1,36 @@
+#!/bin/bash
+
+function usage {
+    echo "usage: $programname columns lines output-file"
+    exit 1
+}
+
+if [ "$#" -ne "3" ]
+then
+    usage
+    exit 1
+fi
+
+COLUMNS=$1
+LINES=$2
+OUTPUT_FILE=$3
+
+[ -e $OUTPUT_FILE ] && rm $OUTPUT_FILE
+
+if [[ ${COLUMNS//[0-9]/} ]]; then
+    echo "$COLUMNS is not numeric"
+    exit 1
+fi
+
+if [[ ${LINES//[0-9]/} ]]; then
+    echo "$LINES is not numeric"
+    exit 1
+fi
+
+for line in $(seq 1 $LINES); do 
+    LINE="cell (0,$line)"
+    for column in $(seq 2 $COLUMNS); do 
+        LINE="$LINE;cell ($column,$line)"
+    done
+    echo $LINE >> $OUTPUT_FILE
+done

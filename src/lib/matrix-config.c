@@ -68,7 +68,12 @@ bool can_show(screen_config_t *available, matrix_properties_t *properties, size_
     return available_width >= 0 && available_height >= 0;
 }
 
-void matrix_config_get_most_expanded(screen_config_t *available, matrix_properties_t *properties, csv_token *start_token, size_t max_columns, size_t max_lines, screen_config_t *used)
+void matrix_config_get_most_expanded(screen_config_t *available,
+                                     matrix_properties_t *properties,
+                                     csv_token *start_token,
+                                     size_t max_columns,
+                                     size_t max_lines,
+                                     screen_config_t *used)
 {
     csv_token *curr_token = start_token;
     size_t start_column = start_token->x;
