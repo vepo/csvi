@@ -104,6 +104,47 @@ void down()
     }
 }
 
+void page_up()
+{
+    if (top_cell.y > last_screen.height)
+    {
+        top_cell.y -= last_screen.height;
+        selected_cell.y -= last_screen.height;
+    }
+    else
+    {
+        top_cell.y = 0;
+        selected_cell.y = 0;
+    }
+
+    if (selected_cell.y > 0)
+    {
+        matrix_presentation_set_selected(&selected_cell);
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
+void page_down()
+{
+    if (top_cell.y < (open_file->lines - last_screen.height) &&
+        (selected_cell.y + last_screen.height) >= (last_screen.height + top_cell.y))
+    {
+        top_cell.y += last_screen.height;
+        selected_cell.y += last_screen.height;
+    }
+    else
+    {
+        selected_cell.y = open_file->lines - 1;
+    }
+
+    matrix_presentation_set_selected(&selected_cell);
+    matrix_presentation_flash();
+}
+
 void paint()
 {
     screen_config_t *scr_config = matrix_presentation_get_screen_config();
@@ -178,6 +219,8 @@ int main(int argc, char *argv[])
     matrix_presentation_configure_handler(RIGHT, &right);
     matrix_presentation_configure_handler(DOWN, &down);
     matrix_presentation_configure_handler(PAINT, &paint);
+    matrix_presentation_configure_handler(PAGE_UP, &page_up);
+    matrix_presentation_configure_handler(PAGE_DOWN, &page_down);
     matrix_presentation_handle();
     matrix_presentation_exit();
     return 0;

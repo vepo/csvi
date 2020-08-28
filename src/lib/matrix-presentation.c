@@ -147,6 +147,16 @@ void matrix_presentation_handle()
             handler = matrix_presentation_get_handler(LEFT);
             LOGGER_INFO("Detected: KEY LEFT\n");
             break;
+        case KEY_NPAGE:
+            // code for arrow left
+            handler = matrix_presentation_get_handler(PAGE_DOWN);
+            LOGGER_INFO("Detected: KEY LEFT\n");
+            break;
+        case KEY_PPAGE:
+            // code for arrow left
+            handler = matrix_presentation_get_handler(PAGE_UP);
+            LOGGER_INFO("Detected: KEY LEFT\n");
+            break;
         default:
             break;
         }

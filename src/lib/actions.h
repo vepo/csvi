@@ -6,6 +6,8 @@ enum Actions
     LEFT = 2,
     DOWN = 3,
     RIGHT = 4,
+    PAGE_UP = 5,
+    PAGE_DOWN = 6,
     PAINT = 999
 };
 
