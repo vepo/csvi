@@ -127,35 +127,45 @@ void matrix_presentation_handle()
         void (*handler)() = NULL;
         switch (getch())
         {
-        case KEY_UP:
-            // code for arrow up
-            handler = matrix_presentation_get_handler(UP);
-            LOGGER_INFO("Detected: KEY UP\n");
-            break;
         case KEY_DOWN:
             // code for arrow down
             handler = matrix_presentation_get_handler(DOWN);
             LOGGER_INFO("Detected: KEY DOWN\n");
             break;
-        case KEY_RIGHT:
-            // code for arrow right
-            handler = matrix_presentation_get_handler(RIGHT);
-            LOGGER_INFO("Detected: KEY RIGHT\n");
+        case KEY_UP:
+            // code for arrow up
+            handler = matrix_presentation_get_handler(UP);
+            LOGGER_INFO("Detected: KEY UP\n");
             break;
         case KEY_LEFT:
             // code for arrow left
             handler = matrix_presentation_get_handler(LEFT);
             LOGGER_INFO("Detected: KEY LEFT\n");
             break;
+        case KEY_RIGHT:
+            // code for arrow right
+            handler = matrix_presentation_get_handler(RIGHT);
+            LOGGER_INFO("Detected: KEY RIGHT\n");
+            break;
+        case KEY_HOME:
+            // code for arrow right
+            handler = matrix_presentation_get_handler(HOME);
+            LOGGER_INFO("Detected: KEY HOME\n");
+            break;
+        case KEY_END:
+            // code for arrow right
+            handler = matrix_presentation_get_handler(END);
+            LOGGER_INFO("Detected: KEY END\n");
+            break;
         case KEY_NPAGE:
             // code for arrow left
             handler = matrix_presentation_get_handler(PAGE_DOWN);
-            LOGGER_INFO("Detected: KEY LEFT\n");
+            LOGGER_INFO("Detected: KEY PAGE_DOWN\n");
             break;
         case KEY_PPAGE:
             // code for arrow left
             handler = matrix_presentation_get_handler(PAGE_UP);
-            LOGGER_INFO("Detected: KEY LEFT\n");
+            LOGGER_INFO("Detected: KEY PAGE_UP\n");
             break;
         default:
             break;
