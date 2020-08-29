@@ -1,6 +1,6 @@
 # Why?
 
-_Describe the reason of the change. It is a new feature? It is some code improvement? It was a bug?
+_Describe the reason of the change. It is a new feature? It is some code improvement? It was a bug?_
 
 # What?
 
