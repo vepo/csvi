@@ -36,6 +36,7 @@ void matrix_presentation_init()
     init_pair(SELECTED_CELL, COLOR_BLACK, COLOR_GREEN);
     init_pair(EVEN_CELL, COLOR_BLACK, COLOR_WHITE);
     init_pair(ODD_CELL, COLOR_WHITE, COLOR_BLACK);
+    init_pair(ERROR_MESSAGE, COLOR_WHITE, COLOR_RED);
 
     noecho();
     curs_set(0);
@@ -173,7 +174,10 @@ void matrix_presentation_handle()
             LOGGER_INFO("Detected: KEY PAGE_UP\n");
             break;
         default:
-            LOGGER_INFO("Detected: %d\n", keyPressed);
+            if (keyPressed > 0)
+            {
+                LOGGER_INFO("Detected: %d\n", keyPressed);
+            }
             break;
         }
 
@@ -183,6 +187,72 @@ void matrix_presentation_handle()
             mp_repeaint();
         }
     }
+}
+
+void matrix_presentation_read_command(void (*callback)(char *))
+{
+    char *command_buffer = malloc(256 * sizeof(char));
+    command_buffer[0] = '\0';
+    bool readingCommand = true;
+    do
+    {
+        size_t len;
+        int keyPressed = getch();
+        switch (keyPressed)
+        {
+        case 10: // ASCII enter
+        case KEY_ENTER:
+            readingCommand = false;
+            LOGGER_INFO("Exiting...\n");
+            break;
+        case KEY_DOWN:
+        case KEY_UP:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+            matrix_presentation_beep();
+            break;
+        case KEY_BACKSPACE:
+            len = strlen(command_buffer);
+            LOGGER_INFO("Backspace: len=%d\n", len);
+            if (len > 0)
+            {
+                command_buffer[len - 1] = '\0';
+            }
+            else
+            {
+                matrix_presentation_beep();
+            }
+
+            WINDOW *cmd_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
+            wclear(cmd_scr);
+            mvwprintw(cmd_scr, 0, 0, command_buffer);
+            delwin(cmd_scr);
+            break;
+        default:
+            if (keyPressed > 0)
+            {
+                LOGGER_INFO("Key pressed: %d\n", keyPressed);
+                len = strlen(command_buffer);
+                command_buffer[len] = keyPressed;
+                command_buffer[len + 1] = '\0';
+
+                WINDOW *cmd_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
+                wclear(cmd_scr);
+                mvwprintw(cmd_scr, 0, 0, command_buffer);
+                delwin(cmd_scr);
+            }
+            break;
+        }
+    } while (readingCommand);
+
+    // clear
+    WINDOW *cmd_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
+    wclear(cmd_scr);
+    delwin(cmd_scr);
+    LOGGER_INFO("Finished!\n");
+
+    (*callback)(command_buffer);
+    free(command_buffer);
 }
 
 void calculate_offsets(coordinates_t *cell,
@@ -280,6 +350,16 @@ void matrix_presentation_set_value(coordinates_t *cell,
         }
     }
     delwin(cell_scr);
+}
+
+void matrix_presentation_error(char *error_message)
+{
+    LOGGER_INFO("ERROR: %s\n", error_message);
+    WINDOW *msg_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
+    wbkgd(msg_scr, COLOR_PAIR(ERROR_MESSAGE));
+    wclear(msg_scr);
+    mvwprintw(msg_scr, 0, 0, error_message);
+    delwin(msg_scr);
 }
 
 void matrix_presentation_set_selected(coordinates_t *cell)

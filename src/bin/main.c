@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <getopt.h> /* for getopt_long; POSIX standard getopt is in unistd.h */
 
 #include "config.h"
@@ -21,8 +22,7 @@ matrix_properties_t m_properties = {.cell_padding_top = 0,
                                     .margin_top = 1,
                                     .margin_right = 1,
                                     .margin_bottom = 2,
-                                    .margin_left = 1,
-                                    .commands_enabled = false};
+                                    .margin_left = 1};
 csv_contents *open_file = NULL;
 
 coordinates_t top_cell = {.x = 0,
@@ -189,9 +189,28 @@ void end()
     matrix_presentation_flash();
 }
 
+void execute_command(char *command)
+{
+    if (command[0] == ':')
+    {
+        if (strcmp(":q", command) == 0)
+        {
+            matrix_presentation_exit();
+            exit(0);
+        }
+    }
+    else
+    {
+        char error_message[255];
+        sprintf(error_message, "Unknown command: %s", command);
+        matrix_presentation_error(error_message);
+        matrix_presentation_beep();
+    }
+}
+
 void command()
 {
-    m_properties.commands_enabled = true;
+    matrix_presentation_read_command(&execute_command);
 }
 
 void paint()

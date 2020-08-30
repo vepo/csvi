@@ -15,7 +15,6 @@ typedef struct matrix_properties
     size_t margin_right;
     size_t margin_bottom;
     size_t margin_left;
-    bool commands_enabled;
 } matrix_properties_t;
 
 typedef struct coordinates
