@@ -10,7 +10,14 @@
 buffer_reader *buffer_reader_open(char *path)
 {
     buffer_reader *reader = (buffer_reader *)malloc(sizeof(buffer_reader));
+
     FILE *fp = fopen(path, "r");
+    if (!fp)
+    {
+        fprintf(stderr, "Could not open file: %s\n", path);
+        exit(-1);
+    }
+
     reader->handler = fp;
     reader->currentBuffer = NULL;
     reader->endReached = false;

@@ -1,11 +1,16 @@
-# CSV Viewer
+####################
+# CSV Viewer       #
+####################
+
 A CSV Viewer written in C.
 
 For learning purpose.
 
 Trying in Go too: https://github.com/vepo/csv-viewer-go/
 
-# Convetions
+####################
+# Convetions       #
+####################
 
 For every function signature, follow the order:
 1. `width  → x`
@@ -13,24 +18,34 @@ For every function signature, follow the order:
 
 > :warning: Except for CSV purpose! In CSV we navigate on lines.
 
-## Build process
+Build process
+-------------
+
 To undestand a little more about the building process: http://blog.fourthbit.com/2013/06/18/creating-an-open-source-program-in-c-with-autotools-part-1-of-2/
 
-## Dependencies
+Dependencies
+------------
 
-```bash
-sudo apt update
-sudo apt install gcc libtool make check pkg-config libncurses5-dev -y
-```
 
-## Code Coverage
+    sudo apt update
+    sudo apt install gcc libtool make check pkg-config libncurses5-dev -y
 
-```bash
-./conf-clean
-./conf-gen
-./configure --enable-coverage
-make
-make check
-lcov -c --directory tests --output-file coverage.info
-genhtml coverage.info --output-directory coverage-report
-```
+Code Coverage
+-------------
+
+
+    ./conf-clean
+    ./conf-gen
+    ./configure --enable-coverage
+    make
+    make check
+    lcov -c --directory tests --output-file coverage.info
+    genhtml coverage.info --output-directory coverage-report
+
+####################
+# Installer        #
+####################
+
+To install execute:
+
+    curl https://vepo.github.io/assets/bin/get-csvi | sudo bash

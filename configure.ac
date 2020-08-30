@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([csv-viewer], [0.0.1], [victor.perticarrari@gmail.com])
+AC_INIT([csv-viewer], [0.0.1], [@vepo])
 
 AC_CONFIG_SRCDIR([src/bin/main.c])
 AC_CONFIG_HEADERS([config.h])

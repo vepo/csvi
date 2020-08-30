@@ -9,6 +9,10 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
+/****************************
+ * Internal Functions
+ ****************************/
+
 void commit_while_isspace(buffer_reader *reader)
 {
     while (buffer_reader_available(reader) > 0 && isspace(buffer_reader_current_char(reader, 0)))
@@ -98,6 +102,16 @@ char *read_escaped_token(buffer_reader *reader, size_t token_end, size_t token_s
     return token;
 }
 
+/****************************
+ * External Functions
+ ****************************/
+char csv_reader_separator = ';';
+
+void csv_reader_set_separator(char separator)
+{
+    csv_reader_separator = separator;
+}
+
 csv_contents *csv_reader_read_file(char *path)
 {
     csv_contents *contents = (csv_contents *)malloc(sizeof(csv_contents));
@@ -127,7 +141,7 @@ csv_contents *csv_reader_read_file(char *path)
                     current_token->y = contents->lines;
                     current_token->next = NULL;
 
-                    if (buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != ';')
+                    if (buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != csv_reader_separator)
                     {
                         token_end++;
                     }
@@ -135,7 +149,7 @@ csv_contents *csv_reader_read_file(char *path)
                     {
                         ++token_end;
                     };
-                    while (buffer_reader_available(reader) > token_end && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
+                    while (buffer_reader_available(reader) > token_end && buffer_reader_current_char(reader, token_end) != csv_reader_separator && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
                     {
                         ++token_end;
                     };
@@ -146,7 +160,7 @@ csv_contents *csv_reader_read_file(char *path)
                 else
                 {
                     size_t token_end = 0;
-                    while ((buffer_reader_available(reader) > token_end || !reader->endReached) && buffer_reader_current_char(reader, token_end) != ';' && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
+                    while ((buffer_reader_available(reader) > token_end || !reader->endReached) && buffer_reader_current_char(reader, token_end) != csv_reader_separator && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
                     {
                         ++token_end;
                     };

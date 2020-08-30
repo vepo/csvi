@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h> /* for getopt_long; POSIX standard getopt is in unistd.h */
 
+#include "config.h"
 #include "actions.h"
 #include "csv-reader.h"
 #include "matrix-presentation.h"
@@ -249,11 +251,60 @@ void paint()
     matrix_config_dispose(config);
 }
 
+void usage()
+{
+    printf("csvi - CSV Viewer %s\n", PACKAGE_VERSION);
+    printf("\n");
+    printf("Usage: csvi [options] file");
+    printf("\n");
+    printf("Options:                                                      Default Values\n");
+    printf("  --separator    -s     Cell Separator                        ;\n");
+    printf("  --help         -h     Print this message\n");
+    printf("  --version      -v     Print the version of this build\n");
+    printf("\n");
+    printf("Any questions: %s\n", PACKAGE_BUGREPORT);
+    printf("\n");
+}
+
 int main(int argc, char *argv[])
 {
-    CHECK_FATAL(argc != 2, "No file to read...\n");
+    static struct option long_options[] = {
+        /*   NAME       ARGUMENT           FLAG  SHORTNAME */
+        {"separator", required_argument, NULL, 's'},
+        {"version", no_argument, NULL, 'v'},
+        {"help", no_argument, NULL, 'h'}};
+    int option_index = 0;
+    int c;
+    while ((c = getopt_long(argc, argv, "s:vh",
+                            long_options, &option_index)) != -1)
+    {
+        switch (c)
+        {
+        case 's':
+            printf("Separator: %s\n", optarg);
+            csv_reader_set_separator(optarg[0]);
+            break;
+        case 'v':
+            printf("csvi version: %s\n", PACKAGE_VERSION);
+            exit(0);
+            break;
+        case 'h':
+            usage();
+            exit(0);
+            break;
+        case '?': //used for some unknown options
+            printf("unknown option: %c\n", optopt);
+            exit(1);
+            break;
+        default:
+            fprintf(stderr, "Usage: %s [-ilw] [file...]\n", argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
 
-    open_file = csv_reader_read_file(argv[1]);
+    CHECK_FATAL(argc < 2, "No file to read...\n");
+    open_file = csv_reader_read_file(argv[argc - 1]);
+
     csv_token *curr = open_file->first;
     while (curr)
     {
