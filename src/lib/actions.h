@@ -10,6 +10,7 @@ enum Actions
     PAGE_DOWN = 6,
     HOME = 7,
     END = 8,
+    COMMAND = 9,
     PAINT = 999
 };
 

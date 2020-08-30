@@ -125,8 +125,13 @@ void matrix_presentation_handle()
     while (true)
     {
         void (*handler)() = NULL;
-        switch (getch())
+        int keyPressed = getch();
+        switch (keyPressed)
         {
+        case 27: // ESC
+            handler = matrix_presentation_get_handler(COMMAND);
+            LOGGER_INFO("Detected: KEY ESC\n");
+            break;
         case KEY_DOWN:
             // code for arrow down
             handler = matrix_presentation_get_handler(DOWN);
@@ -168,6 +173,7 @@ void matrix_presentation_handle()
             LOGGER_INFO("Detected: KEY PAGE_UP\n");
             break;
         default:
+            LOGGER_INFO("Detected: %d\n", keyPressed);
             break;
         }
 

@@ -19,7 +19,8 @@ matrix_properties_t m_properties = {.cell_padding_top = 0,
                                     .margin_top = 1,
                                     .margin_right = 1,
                                     .margin_bottom = 2,
-                                    .margin_left = 1};
+                                    .margin_left = 1,
+                                    .commands_enabled = false};
 csv_contents *open_file = NULL;
 
 coordinates_t top_cell = {.x = 0,
@@ -186,6 +187,11 @@ void end()
     matrix_presentation_flash();
 }
 
+void command()
+{
+    m_properties.commands_enabled = true;
+}
+
 void paint()
 {
     screen_config_t *scr_config = matrix_presentation_get_screen_config();
@@ -264,6 +270,7 @@ int main(int argc, char *argv[])
     matrix_presentation_configure_handler(PAGE_DOWN, &page_down);
     matrix_presentation_configure_handler(HOME, &home);
     matrix_presentation_configure_handler(END, &end);
+    matrix_presentation_configure_handler(COMMAND, &command);
     matrix_presentation_handle();
     matrix_presentation_exit();
     return 0;

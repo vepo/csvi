@@ -1,0 +1,19 @@
+#!/bin/bash
+
+autoreconf -ivf
+./configure
+make dist
+echo "Creating installer..."
+CREATED_FILE=`ls -Art *.tar.gz | tail -n 1`
+CONTENTS=`cat ${CREATED_FILE} | base64`
+
+
+HEAD=`awk '/@@@CONTENTS@@@/{ print NR-1; exit }' installer-template  | xargs head installer-template -n`
+START_END=`awk '/@@@CONTENTS@@@/{ print NR+1; exit }' installer-template`
+TAIL=`tail installer-template -n +${START_END}`
+rm installer || true
+cat > installer << EOF 
+${HEAD}
+${CONTENTS}
+${TAIL}
+EOF

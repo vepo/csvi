@@ -3,6 +3,7 @@ build
 *.exe
 
 csv-viewer
+installer
 	
 ## Automake
 /autom4te.cache/

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+CUR_DIR=$(pwd)
+INSTALL_DIR=$(mktemp -d)
+cd $INSTALL_DIR
+
+cat > csvi.base64 << EOF
+@@@CONTENTS@@@
+EOF
+
+cat csvi.base64 | base64 --decode > csvi.tgz
+tar zxvf csvi.tgz
+rm csvi.tgz csvi.base64
+cd $(ls -1)
+
+./configure 
+make
+sudo make install
+
+cd $CUR_DIR
+rm -rf $INSTALL_DIR

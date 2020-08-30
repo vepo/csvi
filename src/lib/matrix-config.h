@@ -15,6 +15,7 @@ typedef struct matrix_properties
     size_t margin_right;
     size_t margin_bottom;
     size_t margin_left;
+    bool commands_enabled;
 } matrix_properties_t;
 
 typedef struct coordinates
@@ -58,7 +59,7 @@ matrix_config_t *matrix_config_initialize(size_t width,
 
 void matrix_config_dispose(matrix_config_t *config);
 
-void matrix_config_load_cell_info(char *cell_data, 
+void matrix_config_load_cell_info(char *cell_data,
                                   cell_info_t *cell_info);
 
 #endif
