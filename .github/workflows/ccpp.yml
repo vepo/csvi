@@ -65,6 +65,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies 
+        run: sudo apt-get update && sudo apt install -y libncurses5-dev libncursesw5-dev pkg-config check unzip
       - run: bash build-installer
       - uses: actions/upload-artifact@v2
         with:

@@ -47,7 +47,7 @@ test-driver
 tests/run_all_tests
 tests/run_all_tests.trs
 
-src/bin/csvviewer
+src/bin/csvi
 
 coverage-report
 coverage.info

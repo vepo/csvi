@@ -13,8 +13,8 @@ else
 endif
 
 
-bin_PROGRAMS = csvviewer
+bin_PROGRAMS = csvi
 
-csvviewer_SOURCES = main.c
-csvviewer_LDFLAGS = $(COVERAGE_LDFLAG)
-csvviewer_LDADD = $(top_builddir)/src/lib/libcsvviewer-base.a $(AM_LDFLAGS) @CURSES_LIBS@
+csvi_SOURCES = main.c
+csvi_LDFLAGS = $(COVERAGE_LDFLAG)
+csvi_LDADD = $(top_builddir)/src/lib/libcsvviewer-base.a $(AM_LDFLAGS) @CURSES_LIBS@
