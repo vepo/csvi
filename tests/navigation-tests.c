@@ -13,9 +13,6 @@ START_TEST(test_navigation_up)
     coordinates_t cursor_position = {
         .x = 0,
         .y = 0};
-    screen_size_t screen_size = {
-        .width = 10,
-        .height = 10};
 
     ck_assert_int_eq(BEEP, navigate_up(&top_cell, &cursor_position));
     ck_assert_int_eq(0, cursor_position.y);
@@ -72,9 +69,6 @@ START_TEST(test_navigation_left)
     coordinates_t cursor_position = {
         .x = 0,
         .y = 0};
-    screen_size_t screen_size = {
-        .width = 10,
-        .height = 10};
 
     ck_assert_int_eq(BEEP, navigate_left(&top_cell, &cursor_position));
     ck_assert_int_eq(0, cursor_position.x);
