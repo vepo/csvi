@@ -366,7 +366,7 @@ void matrix_presentation_set_selected(coordinates_t *cell)
 {
     WINDOW *pos_scr = subwin(stdscr, 1, 9, configuration.height - 1, configuration.width - 10);
     char str[11];
-    sprintf(str, "%03ld x %03ld", cell->x + 1, cell->y + 1);
+    snprintf(str, 11, "%03ld x %03ld", cell->x + 1, cell->y + 1);
     mvwprintw(pos_scr, 0, 0, str);
     delwin(pos_scr);
 }

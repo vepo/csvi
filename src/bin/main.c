@@ -201,8 +201,10 @@ void init_commands()
 
 void execute_command_go_to_line(char *command, regmatch_t *pmatch)
 {
-    char *go_to_line = (char *)malloc(pmatch[1].rm_eo - pmatch[1].rm_so);
-    strncpy(go_to_line, &command[pmatch[1].rm_so], pmatch[1].rm_eo - pmatch[1].rm_so);
+    size_t input_length = pmatch[1].rm_eo - pmatch[1].rm_so;
+    char *go_to_line = (char *)malloc(input_length + 1);
+    go_to_line[input_length] = '\0';
+    strncpy(go_to_line, &command[pmatch[1].rm_so], input_length);
     int line = atoi(go_to_line) - 1; // zero index
     free(go_to_line);
     if (line < open_file->lines)
@@ -220,8 +222,10 @@ void execute_command_go_to_line(char *command, regmatch_t *pmatch)
 
 void execute_command_go_to_column(char *command, regmatch_t *pmatch)
 {
-    char *go_to_column = (char *)malloc(pmatch[1].rm_eo - pmatch[1].rm_so);
-    strncpy(go_to_column, &command[pmatch[1].rm_so], pmatch[1].rm_eo - pmatch[1].rm_so);
+    size_t input_length = pmatch[1].rm_eo - pmatch[1].rm_so;
+    char *go_to_column = (char *)malloc(input_length + 1);
+    go_to_column[input_length] = '\0';
+    strncpy(go_to_column, &command[pmatch[1].rm_so], input_length);
     int column = atoi(go_to_column) - 1; // zero index
     free(go_to_column);
     if (column < open_file->columns)
@@ -262,7 +266,7 @@ void execute_command(char *command)
     }
 
     char error_message[255];
-    sprintf(error_message, "Unknown command: %s", command);
+    snprintf(error_message, 255, "Unknown command: %s", command);
     matrix_presentation_error(error_message);
     matrix_presentation_beep();
 }
