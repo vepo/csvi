@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h> /* for getopt_long; POSIX standard getopt is in unistd.h */
+#include <regex.h>
 
 #include "config.h"
 #include "actions.h"
@@ -189,6 +190,53 @@ void end()
     matrix_presentation_flash();
 }
 
+regex_t regex_go_to_line;
+regex_t regex_go_to_column;
+
+void init_commands()
+{
+    regcomp(&regex_go_to_line, "^\\:([[:digit:]]+)$", REG_EXTENDED);
+    regcomp(&regex_go_to_column, "^\\:c([[:digit:]]+)$", REG_EXTENDED);
+}
+
+void execute_command_go_to_line(char *command, regmatch_t *pmatch)
+{
+    char *go_to_line = (char *)malloc(pmatch[1].rm_eo - pmatch[1].rm_so);
+    strncpy(go_to_line, &command[pmatch[1].rm_so], pmatch[1].rm_eo - pmatch[1].rm_so);
+    int line = atoi(go_to_line) - 1; // zero index
+    free(go_to_line);
+    if (line < open_file->lines)
+    {
+        top_cell.y = line;
+        selected_cell.y = line;
+        matrix_presentation_set_selected(&selected_cell);
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
+void execute_command_go_to_column(char *command, regmatch_t *pmatch)
+{
+    char *go_to_column = (char *)malloc(pmatch[1].rm_eo - pmatch[1].rm_so);
+    strncpy(go_to_column, &command[pmatch[1].rm_so], pmatch[1].rm_eo - pmatch[1].rm_so);
+    int column = atoi(go_to_column) - 1; // zero index
+    free(go_to_column);
+    if (column < open_file->columns)
+    {
+        top_cell.x = column;
+        selected_cell.x = column;
+        matrix_presentation_set_selected(&selected_cell);
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
 void execute_command(char *command)
 {
     if (command[0] == ':')
@@ -198,14 +246,25 @@ void execute_command(char *command)
             matrix_presentation_exit();
             exit(0);
         }
+
+        regmatch_t pmatch[2];
+        if (!regexec(&regex_go_to_line, command, 2, pmatch, 0))
+        {
+            execute_command_go_to_line(command, pmatch);
+            return;
+        }
+
+        if (!regexec(&regex_go_to_column, command, 2, pmatch, 0))
+        {
+            execute_command_go_to_column(command, pmatch);
+            return;
+        }
     }
-    else
-    {
-        char error_message[255];
-        sprintf(error_message, "Unknown command: %s", command);
-        matrix_presentation_error(error_message);
-        matrix_presentation_beep();
-    }
+
+    char error_message[255];
+    sprintf(error_message, "Unknown command: %s", command);
+    matrix_presentation_error(error_message);
+    matrix_presentation_beep();
 }
 
 void command()
@@ -306,15 +365,12 @@ int main(int argc, char *argv[])
         case 'v':
             printf("csvi version: %s\n", PACKAGE_VERSION);
             exit(0);
-            break;
         case 'h':
             usage();
             exit(0);
-            break;
         case '?': //used for some unknown options
             printf("unknown option: %c\n", optopt);
             exit(1);
-            break;
         default:
             fprintf(stderr, "Usage: %s [-ilw] [file...]\n", argv[0]);
             exit(EXIT_FAILURE);
@@ -329,7 +385,7 @@ int main(int argc, char *argv[])
     {
         curr = curr->next;
     }
-
+    init_commands();
     matrix_presentation_init();
     matrix_presentation_configure_handler(UP, &up);
     matrix_presentation_configure_handler(LEFT, &left);

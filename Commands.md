@@ -22,3 +22,5 @@ The command can be of the type:
 | End | Navigation | Go one page right, a page is defined by the size of the screen  |
 | Esc | Mode | Access the command interface  |
 | ":q" | Command | Exit |
+| ":[0-9]" | Command | Go to line |
+| ":c[0-9]" | Command | Go to column |
