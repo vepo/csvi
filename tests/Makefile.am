@@ -28,17 +28,21 @@ libmock_a_SOURCES = \
 ## Tests Rules
 
 TESTS = csv_parser_tests \
-        matrix_tests
+        matrix_tests \
+        navigation_tests
 
 check_PROGRAMS = csv_parser_tests \
-                 matrix_tests
+                 matrix_tests \
+                 navigation_tests
 
 if DEBUG
   csv_parser_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
   matrix_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
+  navigation_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
 else
   csv_parser_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
   matrix_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
+  navigation_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
 endif
 
 csv_parser_tests_LDFLAGS = $(COVERAGE_LDFLAG)
@@ -48,3 +52,7 @@ csv_parser_tests_LDADD = $(top_builddir)/src/lib/*.o libmock.a $(AM_LDFLAGS) @CU
 matrix_tests_LDFLAGS = $(COVERAGE_LDFLAG)
 matrix_tests_SOURCES = matrix-tests.c
 matrix_tests_LDADD = $(top_builddir)/src/lib/*.o libmock.a $(AM_LDFLAGS) @CURSES_LIBS@  @CHECK_LIBS@
+
+navigation_tests_LDFLAGS = $(COVERAGE_LDFLAG)
+navigation_tests_SOURCES = navigation-tests.c
+navigation_tests_LDADD = $(top_builddir)/src/lib/*.o libmock.a $(AM_LDFLAGS) @CURSES_LIBS@  @CHECK_LIBS@

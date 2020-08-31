@@ -11,10 +11,11 @@
 #include "csv-reader.h"
 #include "matrix-presentation.h"
 #include "matrix-config.h"
+#include "navigation.h"
 #include "helper.h"
 
-screen_config_t last_screen = {.width = 1,
-                               .height = 1};
+screen_size_t last_screen = {.width = 1,
+                             .height = 1};
 
 matrix_properties_t m_properties = {.cell_padding_top = 0,
                                     .cell_padding_right = 2,
@@ -32,80 +33,40 @@ coordinates_t top_cell = {.x = 0,
 coordinates_t selected_cell = {.x = 0,
                                .y = 0};
 
-void up()
+void handle_nagivation(NavigationResult result)
 {
-    if (top_cell.y > 0 && selected_cell.y == top_cell.y)
+    switch (result)
     {
-        top_cell.y--;
-    }
-
-    if (selected_cell.y > 0)
-    {
-        selected_cell.y--;
+    case CURSOR_UPDATED:
         matrix_presentation_set_selected(&selected_cell);
         matrix_presentation_flash();
-    }
-    else
-    {
+        break;
+    case BEEP:
         matrix_presentation_beep();
+        break;
+    default:
+        break;
     }
+}
+
+void up()
+{
+    handle_nagivation(navigate_up(&top_cell, &selected_cell, &last_screen, open_file->lines, open_file->columns));
 }
 
 void left()
 {
-    if (top_cell.x > 0 && selected_cell.x == top_cell.x)
-    {
-        top_cell.x--;
-    }
-
-    if (selected_cell.x > 0)
-    {
-        selected_cell.x--;
-        matrix_presentation_set_selected(&selected_cell);
-        matrix_presentation_flash();
-    }
-    else
-    {
-        matrix_presentation_beep();
-    }
+    handle_nagivation(navigate_left(&top_cell, &selected_cell, &last_screen, open_file->lines, open_file->columns));
 }
 
 void right()
 {
-    if (top_cell.x < open_file->columns - 1 && last_screen.width + top_cell.x - 1 == selected_cell.x + 1)
-    {
-        top_cell.x++;
-    }
-
-    if (selected_cell.x < open_file->columns - 1)
-    {
-        selected_cell.x++;
-        matrix_presentation_set_selected(&selected_cell);
-        matrix_presentation_flash();
-    }
-    else
-    {
-        matrix_presentation_beep();
-    }
+    handle_nagivation(navigate_right(&top_cell, &selected_cell, &last_screen, open_file->lines, open_file->columns));
 }
 
 void down()
 {
-    if (top_cell.y < open_file->lines && selected_cell.y + 1 >= last_screen.height + top_cell.y)
-    {
-        top_cell.y++;
-    }
-
-    if (selected_cell.y < open_file->lines - 1)
-    {
-        selected_cell.y++;
-        matrix_presentation_set_selected(&selected_cell);
-        matrix_presentation_flash();
-    }
-    else
-    {
-        matrix_presentation_beep();
-    }
+    handle_nagivation(navigate_down(&top_cell, &selected_cell, &last_screen, open_file->lines, open_file->columns));
 }
 
 void page_up()
@@ -278,10 +239,10 @@ void command()
 
 void paint()
 {
-    screen_config_t *scr_config = matrix_presentation_get_screen_config();
+    screen_size_t *scr_config = matrix_presentation_get_screen_size();
     csv_token *token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
-    screen_config_t current_screen = {.width = 1,
-                                      .height = 1};
+    screen_size_t current_screen = {.width = 1,
+                                    .height = 1};
     matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &current_screen);
 
     if (current_screen.height != last_screen.height || current_screen.width != last_screen.width)

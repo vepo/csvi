@@ -49,8 +49,8 @@ START_TEST(test_matrix_expansion_lower)
                                         .margin_bottom = 2,
                                         .margin_left = 1};
     matrix_config_t *config = matrix_config_initialize(3, 4);
-    screen_config_t windows_configuration = {.width = 40, .height = 10};
-    screen_config_t presentation_configuration = {.width = 1, .height = 1};
+    screen_size_t windows_configuration = {.width = 40, .height = 10};
+    screen_size_t presentation_configuration = {.width = 1, .height = 1};
 
     csv_token *contents = mock_token(0, 0, "cell 0,0", NULL);
     mock_token(0, 1, "cell 0,1", contents);
@@ -94,8 +94,8 @@ START_TEST(test_matrix_expansion_bigger)
                                         .margin_bottom = 2,
                                         .margin_left = 1};
     matrix_config_t *config = matrix_config_initialize(4, 6);
-    screen_config_t windows_configuration = {.width = 40, .height = 8};
-    screen_config_t presentation_configuration = {.width = 1, .height = 1};
+    screen_size_t windows_configuration = {.width = 40, .height = 8};
+    screen_size_t presentation_configuration = {.width = 1, .height = 1};
 
     csv_token *contents = mock_token(0, 0, "cell 0,0", NULL);
     mock_token(0, 1, "cell 0,1", contents);

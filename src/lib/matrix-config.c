@@ -52,7 +52,7 @@ void matrix_config_load_cell_info(char *cell_data, cell_info_t *cell_info)
     }
 }
 
-bool can_show(screen_config_t *available, matrix_properties_t *properties, size_t *widths, size_t *heights, size_t columns, size_t lines)
+bool can_show(screen_size_t *available, matrix_properties_t *properties, size_t *widths, size_t *heights, size_t columns, size_t lines)
 {
     int available_width = available->width - properties->margin_right - properties->margin_left;
     for (size_t index = 0; index < columns && available_width >= 0; ++index)
@@ -68,12 +68,12 @@ bool can_show(screen_config_t *available, matrix_properties_t *properties, size_
     return available_width > 0 && available_height >= 0;
 }
 
-void matrix_config_get_most_expanded(screen_config_t *available,
+void matrix_config_get_most_expanded(screen_size_t *available,
                                      matrix_properties_t *properties,
                                      csv_token *start_token,
                                      size_t max_columns,
                                      size_t max_lines,
-                                     screen_config_t *used)
+                                     screen_size_t *used)
 {
     csv_token *curr_token = start_token;
     size_t start_column = start_token->x;

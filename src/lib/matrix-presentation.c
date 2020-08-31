@@ -5,7 +5,7 @@
 #include <curses.h>
 #include "helper.h"
 
-screen_config_t configuration = {.width = 0, .height = 0};
+screen_size_t configuration = {.width = 0, .height = 0};
 
 typedef struct actions_config
 {
@@ -46,9 +46,9 @@ void matrix_presentation_init()
     nodelay(stdscr, true);
 }
 
-screen_config_t *matrix_presentation_get_screen_config()
+screen_size_t *matrix_presentation_get_screen_size()
 {
-    screen_config_t curr_config;
+    screen_size_t curr_config;
     getmaxyx(stdscr, curr_config.height, curr_config.width);
     if (curr_config.width != configuration.width || curr_config.height != configuration.height)
     {
