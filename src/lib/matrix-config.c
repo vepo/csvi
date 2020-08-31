@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "helper.h"
 
 matrix_config_t *matrix_config_initialize(size_t width, size_t height)
 {
@@ -92,7 +93,7 @@ void matrix_config_get_most_expanded(screen_size_t *available,
 
     while (curr_token)
     {
-        if (curr_token->x >= start_column && curr_token->y >= start_line)
+        if (curr_token->x >= start_column && curr_token->y >= start_line && used->height <= available->height)
         {
             cell_info_t cell_info;
             matrix_config_load_cell_info(curr_token->data, &cell_info);
@@ -118,6 +119,10 @@ void matrix_config_get_most_expanded(screen_size_t *available,
                     used->width = columns;
                     used->height = lines;
                 }
+                else if (offset_x == 0)
+                {
+                    return;
+                }
             }
         }
         curr_token = curr_token->next;
@@ -135,6 +140,7 @@ void matrix_config_load_sizes(csv_token *start_token, matrix_config_t *config)
         {
             if (config->column_width[curr_token->x - start_token->x] < cell_info.width)
             {
+                LOGGER_INFO("WIDTH: (%d, %d) -> %d\n", curr_token->x, curr_token->y, config->column_width[curr_token->x - start_token->x]);
                 config->column_width[curr_token->x - start_token->x] = cell_info.width;
             }
         }
@@ -146,6 +152,7 @@ void matrix_config_load_sizes(csv_token *start_token, matrix_config_t *config)
                 config->line_height[curr_token->y - start_token->y] = cell_info.height;
             }
         }
+
         curr_token = curr_token->next;
     }
 }

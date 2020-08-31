@@ -54,6 +54,7 @@ screen_size_t *matrix_presentation_get_screen_size()
     {
         configuration.width = curr_config.width;
         configuration.height = curr_config.height;
+        LOGGER_INFO("Screen size changed: (%d,%d)\n", curr_config.width, curr_config.height);
     }
 
     return &configuration;

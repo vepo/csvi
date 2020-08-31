@@ -51,22 +51,22 @@ void handle_nagivation(NavigationResult result)
 
 void up()
 {
-    handle_nagivation(navigate_up(&top_cell, &selected_cell, &last_screen, open_file->lines, open_file->columns));
+    handle_nagivation(navigate_up(&top_cell, &selected_cell));
 }
 
 void left()
 {
-    handle_nagivation(navigate_left(&top_cell, &selected_cell, &last_screen, open_file->lines, open_file->columns));
+    handle_nagivation(navigate_left(&top_cell, &selected_cell));
 }
 
 void right()
 {
-    handle_nagivation(navigate_right(&top_cell, &selected_cell, &last_screen, open_file->lines, open_file->columns));
+    handle_nagivation(navigate_right(&top_cell, &selected_cell, &last_screen, open_file->columns));
 }
 
 void down()
 {
-    handle_nagivation(navigate_down(&top_cell, &selected_cell, &last_screen, open_file->lines, open_file->columns));
+    handle_nagivation(navigate_down(&top_cell, &selected_cell, &last_screen, open_file->lines));
 }
 
 void page_up()
@@ -243,6 +243,7 @@ void paint()
     csv_token *token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
     screen_size_t current_screen = {.width = 1,
                                     .height = 1};
+
     matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &current_screen);
 
     if (current_screen.height != last_screen.height || current_screen.width != last_screen.width)
