@@ -5,5 +5,5 @@
 ##./configure --enable-coverage
 make
 make check
-lcov -c --directory tests --output-file coverage.info
+lcov -c --directory src --directory tests --output-file coverage.info
 genhtml coverage.info --output-directory coverage-report

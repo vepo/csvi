@@ -20,7 +20,7 @@ NavigationResult navigate_up(coordinates_t *top_cell, coordinates_t *cursor_posi
 
 NavigationResult navigate_down(coordinates_t *top_cell, coordinates_t *cursor_position, screen_size_t *screen_size, size_t num_lines, size_t num_columns)
 {
-    if (top_cell->y < num_lines && cursor_position->y + 1 >= screen_size->height + top_cell->y)
+    if (top_cell->y + screen_size->height < num_lines && top_cell->y + screen_size->height == cursor_position->y + 1)
     {
         top_cell->y++;
     }
