@@ -1,7 +1,5 @@
 #include "navigation.h"
 
-#include "helper.h"
-
 NavigationResult navigate_up(coordinates_t *top_cell,
                              coordinates_t *cursor_position)
 {
@@ -66,7 +64,6 @@ NavigationResult navigate_right(coordinates_t *top_cell,
                                 const screen_size_t *screen_size,
                                 size_t num_columns)
 {
-    LOGGER_INFO("top_cell->x=%d screen_size->width=%d num_columns=%d cursor_position->x=%d\n", top_cell->x, screen_size->width, num_columns, cursor_position->x);
     if (top_cell->x + screen_size->width < num_columns && top_cell->x + screen_size->width == cursor_position->x + 1)
     {
         top_cell->x++;
@@ -87,7 +84,6 @@ NavigationResult navigate_page_up(coordinates_t *top_cell,
                                   coordinates_t *cursor_position,
                                   const screen_size_t *screen_size)
 {
-    LOGGER_INFO("cursor_position->y=%d top_cell->y=%d screen_size->height=%d\n", cursor_position->y, top_cell->y, screen_size->height);
     if (cursor_position->y > 0)
     {
         if (top_cell->y > screen_size->height)
@@ -125,6 +121,29 @@ NavigationResult navigate_page_down(coordinates_t *top_cell,
             top_cell->y = cursor_position->y = num_lines - 1;
         }
 
+        return CURSOR_UPDATED;
+    }
+    else
+    {
+        return BEEP;
+    }
+}
+
+NavigationResult navigate_page_previous(coordinates_t *top_cell,
+                                        coordinates_t *cursor_position,
+                                        const screen_size_t *screen_size)
+{
+    if (cursor_position->x > 0)
+    {
+        if (top_cell->x > screen_size->width)
+        {
+            top_cell->x -= screen_size->width - 1;
+            cursor_position->x -= screen_size->width - 1;
+        }
+        else
+        {
+            top_cell->x = cursor_position->x = 0;
+        }
         return CURSOR_UPDATED;
     }
     else

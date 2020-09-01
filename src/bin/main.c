@@ -83,26 +83,7 @@ void page_down()
 
 void home()
 {
-    if (top_cell.x > current_screen.width)
-    {
-        top_cell.x -= current_screen.width - 1;
-        selected_cell.x -= current_screen.width - 1;
-    }
-    else
-    {
-        top_cell.x = 0;
-        selected_cell.x = 0;
-    }
-
-    if (selected_cell.y > 0)
-    {
-        matrix_presentation_set_selected(&selected_cell);
-        matrix_presentation_flash();
-    }
-    else
-    {
-        matrix_presentation_beep();
-    }
+    handle_nagivation(navigate_page_previous(&top_cell, &selected_cell, &current_screen));
 }
 
 void end()
