@@ -25,7 +25,7 @@ void matrix_presentation_set_value(coordinates_t *position,
                                    bool selected,
                                    matrix_config_t *config,
                                    matrix_properties_t *m_properties);
-screen_config_t *matrix_presentation_get_screen_config();
+screen_size_t *matrix_presentation_get_screen_size();
 void matrix_presentation_handle();
 void matrix_presentation_error(char *error_message);
 

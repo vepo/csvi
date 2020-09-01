@@ -37,18 +37,18 @@ typedef struct matrix_config
     size_t columns;
 } matrix_config_t;
 
-typedef struct screen_config
+typedef struct screen_size
 {
     int width;
     int height;
-} screen_config_t;
+} screen_size_t;
 
-void matrix_config_get_most_expanded(screen_config_t *available,
-                                     matrix_properties_t *properties,
+void matrix_config_get_most_expanded(const screen_size_t *available,
+                                     const matrix_properties_t *properties,
                                      csv_token *start_token,
                                      size_t max_lines,
                                      size_t max_columns,
-                                     screen_config_t *used);
+                                     screen_size_t *used);
 
 void matrix_config_load_sizes(csv_token *start_token,
                               matrix_config_t *config);
