@@ -9,8 +9,8 @@ matrix_config_t *matrix_config_initialize(size_t width, size_t height)
     matrix_config_t *config = (matrix_config_t *)malloc(sizeof(matrix_config_t));
     config->columns = width;
     config->heights = height;
-    config->column_width = (size_t *)calloc(width, sizeof(size_t));
-    config->line_height = (size_t *)calloc(height, sizeof(size_t));
+    config->column_width = (size_t *)malloc(width * sizeof(size_t));
+    config->line_height = (size_t *)malloc(height * sizeof(size_t));
     return config;
 }
 
@@ -77,16 +77,6 @@ bool can_fit(screen_size_t *available, matrix_properties_t *properties, csv_toke
 {
     size_t widths[possible->width];
     size_t heights[possible->height];
-    for (size_t index = 0; index < possible->width; ++index)
-    {
-        widths[index] = 0;
-    }
-
-    for (size_t index = 0; index < possible->height; ++index)
-    {
-        heights[index] = 0;
-    }
-
     matrix_config_t config = {.columns = possible->width,
                               .heights = possible->height,
                               .column_width = widths,
@@ -166,9 +156,11 @@ void matrix_config_get_most_expanded(screen_size_t *available,
 
 void matrix_config_load_sizes(csv_token *start_token, matrix_config_t *config)
 {
+    // clean the values
+    memset(config->column_width, 0, sizeof(size_t) * config->columns);
+    memset(config->line_height, 0, sizeof(size_t) * config->heights);
 
     csv_token *curr_token = start_token;
-
     while (curr_token &&
            (curr_token->x >= start_token->x ||
             curr_token->x < start_token->x + config->columns ||
