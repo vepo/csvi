@@ -213,6 +213,36 @@ START_TEST(test_navigation_home)
 }
 END_TEST
 
+START_TEST(test_navigation_end)
+{
+    // nothing
+    coordinates_t top_cell = {
+        .x = 0,
+        .y = 0};
+    coordinates_t cursor_position = {
+        .x = 9,
+        .y = 0};
+
+    screen_size_t screen_size = {
+        .width = 10,
+        .height = 10};
+
+    ck_assert_int_eq(BEEP, navigate_page_next(&top_cell, &cursor_position, &screen_size, 10));
+    ck_assert_int_eq(9, cursor_position.x);
+    ck_assert_int_eq(0, top_cell.x);
+
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_page_next(&top_cell, &cursor_position, &screen_size, 20));
+    ck_assert_int_eq(19, cursor_position.x);
+    ck_assert_int_eq(10, top_cell.x);
+
+    cursor_position.x = 7;
+    top_cell.x = 0;
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_page_next(&top_cell, &cursor_position, &screen_size, 10));
+    ck_assert_int_eq(9, cursor_position.x);
+    ck_assert_int_eq(0, top_cell.x);
+}
+END_TEST
+
 Suite *matrix_test_suite(void)
 {
     Suite *s = suite_create("Navigation");
@@ -225,6 +255,7 @@ Suite *matrix_test_suite(void)
     tcase_add_test(tc_core, test_navigation_page_up);
     tcase_add_test(tc_core, test_navigation_page_down);
     tcase_add_test(tc_core, test_navigation_home);
+    tcase_add_test(tc_core, test_navigation_end);
 
     suite_add_tcase(s, tc_core);
     return s;

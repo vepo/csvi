@@ -151,3 +151,29 @@ NavigationResult navigate_page_previous(coordinates_t *top_cell,
         return BEEP;
     }
 }
+
+NavigationResult navigate_page_next(coordinates_t *top_cell,
+                                    coordinates_t *cursor_position,
+                                    const screen_size_t *screen_size,
+                                    size_t num_columns)
+{
+    if (cursor_position->x < num_columns - 1)
+    {
+        if (top_cell->x + screen_size->width < num_columns &&
+            cursor_position->x + screen_size->width < num_columns)
+        {
+            top_cell->x += screen_size->width;
+            cursor_position->x += screen_size->width;
+        }
+        else
+        {
+            cursor_position->x = num_columns - 1;
+        }
+
+        return CURSOR_UPDATED;
+    }
+    else
+    {
+        return BEEP;
+    }
+}

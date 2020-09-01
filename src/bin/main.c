@@ -88,19 +88,7 @@ void home()
 
 void end()
 {
-    if (top_cell.x < (open_file->columns - current_screen.width) &&
-        (selected_cell.x + current_screen.width) >= (current_screen.width + top_cell.x))
-    {
-        top_cell.x += current_screen.width - 1;
-        selected_cell.x += current_screen.width - 1;
-    }
-    else
-    {
-        selected_cell.x = open_file->columns - 1;
-    }
-
-    matrix_presentation_set_selected(&selected_cell);
-    matrix_presentation_flash();
+    handle_nagivation(navigate_page_next(&top_cell, &selected_cell, &current_screen, open_file->columns));
 }
 
 regex_t regex_go_to_line;
