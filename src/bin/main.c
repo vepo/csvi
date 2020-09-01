@@ -71,26 +71,7 @@ void down()
 
 void page_up()
 {
-    if (top_cell.y > last_screen.height)
-    {
-        top_cell.y -= last_screen.height;
-        selected_cell.y -= last_screen.height;
-    }
-    else
-    {
-        top_cell.y = 0;
-        selected_cell.y = 0;
-    }
-
-    if (selected_cell.y > 0)
-    {
-        matrix_presentation_set_selected(&selected_cell);
-        matrix_presentation_flash();
-    }
-    else
-    {
-        matrix_presentation_beep();
-    }
+    handle_nagivation(navigate_page_up(&top_cell, &selected_cell, &last_screen));
 }
 
 void page_down()

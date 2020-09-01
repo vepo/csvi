@@ -82,3 +82,27 @@ NavigationResult navigate_right(coordinates_t *top_cell,
         return BEEP;
     }
 }
+
+NavigationResult navigate_page_up(coordinates_t *top_cell,
+                                  coordinates_t *cursor_position,
+                                  const screen_size_t *screen_size)
+{
+    if (cursor_position->y > 0)
+    {
+        if (top_cell->y > screen_size->height)
+        {
+            top_cell->y -= screen_size->height;
+            cursor_position->y -= screen_size->height;
+        }
+        else
+        {
+            top_cell->y = 0;
+            cursor_position->y = 0;
+        }
+        return CURSOR_UPDATED;
+    }
+    else
+    {
+        return BEEP;
+    }
+}
