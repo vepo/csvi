@@ -57,7 +57,7 @@ bool can_show(const screen_size_t *available,
               const matrix_properties_t *properties,
               const size_t *widths,
               const size_t *heights,
-              screen_size_t *possible)
+              const screen_size_t *possible)
 {
     int available_width = available->width - properties->margin_right - properties->margin_left;
     for (size_t index = 0; index < possible->width && available_width >= 0; ++index)
@@ -73,7 +73,10 @@ bool can_show(const screen_size_t *available,
     return available_width >= 0 && available_height >= 0;
 }
 
-bool can_fit(screen_size_t *available, matrix_properties_t *properties, csv_token *start_token, screen_size_t *possible)
+bool can_fit(const screen_size_t *available,
+             const matrix_properties_t *properties,
+             csv_token *start_token,
+             screen_size_t *possible)
 {
     size_t widths[possible->width];
     size_t heights[possible->height];
