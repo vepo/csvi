@@ -16,6 +16,8 @@
 
 screen_size_t last_screen = {.width = 1,
                              .height = 1};
+screen_size_t current_screen = {.width = 1,
+                                .height = 1};
 
 matrix_properties_t m_properties = {.cell_padding_top = 0,
                                     .cell_padding_right = 2,
@@ -61,42 +63,30 @@ void left()
 
 void right()
 {
-    handle_nagivation(navigate_right(&top_cell, &selected_cell, &last_screen, open_file->columns));
+    handle_nagivation(navigate_right(&top_cell, &selected_cell, &current_screen, open_file->columns));
 }
 
 void down()
 {
-    handle_nagivation(navigate_down(&top_cell, &selected_cell, &last_screen, open_file->lines));
+    handle_nagivation(navigate_down(&top_cell, &selected_cell, &current_screen, open_file->lines));
 }
 
 void page_up()
 {
-    handle_nagivation(navigate_page_up(&top_cell, &selected_cell, &last_screen));
+    handle_nagivation(navigate_page_up(&top_cell, &selected_cell, &current_screen));
 }
 
 void page_down()
 {
-    if (top_cell.y < (open_file->lines - last_screen.height) &&
-        (selected_cell.y + last_screen.height) >= (last_screen.height + top_cell.y))
-    {
-        top_cell.y += last_screen.height;
-        selected_cell.y += last_screen.height;
-    }
-    else
-    {
-        selected_cell.y = open_file->lines - 1;
-    }
-
-    matrix_presentation_set_selected(&selected_cell);
-    matrix_presentation_flash();
+    handle_nagivation(navigate_page_down(&top_cell, &selected_cell, &current_screen, open_file->lines));
 }
 
 void home()
 {
-    if (top_cell.x > last_screen.width)
+    if (top_cell.x > current_screen.width)
     {
-        top_cell.x -= last_screen.width - 1;
-        selected_cell.x -= last_screen.width - 1;
+        top_cell.x -= current_screen.width - 1;
+        selected_cell.x -= current_screen.width - 1;
     }
     else
     {
@@ -117,11 +107,11 @@ void home()
 
 void end()
 {
-    if (top_cell.x < (open_file->columns - last_screen.width) &&
-        (selected_cell.x + last_screen.width) >= (last_screen.width + top_cell.x))
+    if (top_cell.x < (open_file->columns - current_screen.width) &&
+        (selected_cell.x + current_screen.width) >= (current_screen.width + top_cell.x))
     {
-        top_cell.x += last_screen.width - 1;
-        selected_cell.x += last_screen.width - 1;
+        top_cell.x += current_screen.width - 1;
+        selected_cell.x += current_screen.width - 1;
     }
     else
     {
@@ -218,15 +208,8 @@ void command()
     matrix_presentation_read_command(&execute_command);
 }
 
-void paint()
+void update_screen(const screen_size_t *scr_config, csv_token *top_left_token)
 {
-    screen_size_t *scr_config = matrix_presentation_get_screen_size();
-    csv_token *token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
-    screen_size_t current_screen = {.width = 1,
-                                    .height = 1};
-
-    matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &current_screen);
-
     if (current_screen.height != last_screen.height || current_screen.width != last_screen.width)
     {
         matrix_presentation_refresh(&m_properties);
@@ -240,10 +223,10 @@ void paint()
         top_cell.x += 2;
         matrix_presentation_refresh(&m_properties);
         matrix_presentation_set_selected(&selected_cell);
-        token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
+        top_left_token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
         current_screen.width = 1;
         current_screen.height = 1;
-        matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &current_screen);
+        matrix_config_get_most_expanded(scr_config, &m_properties, top_left_token, open_file->columns, open_file->lines, &current_screen);
 
         if (current_screen.height != last_screen.height || current_screen.width != last_screen.width)
         {
@@ -253,6 +236,18 @@ void paint()
             last_screen.width = current_screen.width;
         }
     }
+}
+
+void paint()
+{
+    /**
+     * TODO: current_screen is storing all available size on data instead of all available size on screen. This is creating a problem for PAGE_UP/PAGE_DOWN
+     **/
+    screen_size_t *scr_config = matrix_presentation_get_screen_size();
+    csv_token *token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
+    current_screen.height = current_screen.width = 1;
+    matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &current_screen);
+    update_screen(scr_config, token);
 
     matrix_config_t *config = matrix_config_initialize(current_screen.width, current_screen.height);
     matrix_config_load_sizes(token, config);

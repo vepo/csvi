@@ -17,5 +17,6 @@ NavigationResult navigate_down(coordinates_t *top_cell, coordinates_t *cursor_po
 NavigationResult navigate_left(coordinates_t *top_cell, coordinates_t *cursor_position);
 NavigationResult navigate_right(coordinates_t *top_cell, coordinates_t *cursor_position, const screen_size_t *screen_size, size_t num_columns);
 NavigationResult navigate_page_up(coordinates_t *top_cell, coordinates_t *cursor_position, const screen_size_t *screen_size);
+NavigationResult navigate_page_down(coordinates_t *top_cell, coordinates_t *cursor_position, const screen_size_t *screen_size, size_t num_lines);
 
 #endif

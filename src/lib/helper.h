@@ -18,15 +18,15 @@
         exit(-1);                       \
     }
 
-#ifdef LOGGER_INFO_ENABLE
+//#ifdef LOGGER_INFO_ENABLE
 #define LOGGER_INFO(message, ...)                       \
     {                                                   \
         FILE *logger_fp = fopen("csvviewer.log", "a+"); \
         fprintf(logger_fp, message, ##__VA_ARGS__);     \
         fclose(logger_fp);                              \
     }
-#else
-#define LOGGER_INFO(message, ...)
-#endif
+//#else
+//#define LOGGER_INFO(message, ...)
+//#endif
 
 #endif
