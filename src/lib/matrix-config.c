@@ -170,8 +170,8 @@ void matrix_config_load_sizes(csv_token *start_token, matrix_config_t *config)
             curr_token->y < start_token->y + config->heights))
     {
         if (curr_token->x >= start_token->x &&
-            curr_token->x <= start_token->x + config->columns &&
-            curr_token->y <= start_token->y + config->heights)
+            curr_token->x < start_token->x + config->columns &&
+            curr_token->y < start_token->y + config->heights)
         {
             cell_info_t cell_info = {.height = 1, .width = 0};
             matrix_config_load_cell_info(curr_token->data, &cell_info);
