@@ -134,12 +134,12 @@ END_TEST
 /************************************************
  * |                                         82                                       |
  * ┌──────────────────────────────────────────────────────────────────────────────────┐ ---
- * │ cell (0,1)     cell (1,1)     cell (2,1)     cell (3,1)     cell (4,1)           │
- * │ cell (0,2)     cell (1,2)     cell (2,2)     cell (3,2)     cell (4,2)           │
- * │ cell (0,3)     cell (1,3)     cell (2,3)     cell (3,3)     cell (4,3)           │  5
- * │ cell (0,4)     cell (1,4)     cell (2,4)     cell (3,4)     cell (4,4)           │
- * │ cell (0,5)     cell (1,5)     cell (2,5)     cell (3,5)     cell (4,5)           │
- * └──────────────────────────────────────────────────────────────────────────────────┘
+ * │ cell (0,1)   cell (1,1)   cell (2,1)   cell (3,1)   cell (4,1)   cell (5, 1)     │
+ * │ cell (0,2)   cell (1,2)   cell (2,2)   cell (3,2)   cell (4,2)   cell (5, 2)     │
+ * │ cell (0,3)   cell (1,3)   cell (2,3)   cell (3,3)   cell (4,3)   cell (5, 3)     │  5
+ * │ cell (0,4)   cell (1,4)   cell (2,4)   cell (3,4)   cell (4,4)   cell (5, 4)     │
+ * │ cell (0,5)   cell (1,5)   cell (2,5)   cell (3,5)   cell (4,5)   cell (5, 5)     │
+ * └──────────────────────────────────────────────────────────────────────────────────┘ ---
  *                                                                           001 x 001
  **/
 START_TEST(test_matrix_expansion_wider)
@@ -195,7 +195,7 @@ START_TEST(test_matrix_expansion_wider)
 
     matrix_config_get_most_expanded(&windows_configuration, &m_properties, contents, 6, 6, &presentation_configuration);
 
-    ck_assert_int_eq(6, presentation_configuration.width); // TODO: testing failing
+    ck_assert_int_eq(6, presentation_configuration.width); 
     ck_assert_int_eq(5, presentation_configuration.height);
     csv_token_dispose(contents);
     matrix_config_dispose(config);

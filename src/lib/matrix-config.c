@@ -57,21 +57,65 @@ bool can_show(const screen_size_t *available,
               const matrix_properties_t *properties,
               const size_t *widths,
               const size_t *heights,
-              size_t columns,
-              size_t lines)
+              screen_size_t *possible)
 {
     int available_width = available->width - properties->margin_right - properties->margin_left;
-    for (size_t index = 0; index < columns && available_width >= 0; ++index)
+    for (size_t index = 0; index < possible->width && available_width >= 0; ++index)
     {
         available_width -= widths[index] + properties->cell_padding_left + properties->cell_padding_right;
     }
 
     int available_height = available->height - properties->margin_top - properties->margin_bottom;
-    for (size_t index = 0; index < lines && available_height >= 0; ++index)
+    for (size_t index = 0; index < possible->height && available_height >= 0; ++index)
     {
         available_height -= heights[index] + properties->cell_padding_top + properties->cell_padding_bottom;
     }
-    return available_width > 0 && available_height >= 0;
+    return available_width >= 0 && available_height >= 0;
+}
+
+bool can_fit(screen_size_t *available, matrix_properties_t *properties, csv_token *start_token, screen_size_t *possible)
+{
+    size_t widths[possible->width];
+    size_t heights[possible->height];
+    for (size_t index = 0; index < possible->width; ++index)
+    {
+        widths[index] = 0;
+    }
+
+    for (size_t index = 0; index < possible->height; ++index)
+    {
+        heights[index] = 0;
+    }
+
+    csv_token *curr_token = start_token;
+    while (curr_token &&
+           (curr_token->x >= start_token->x ||
+            curr_token->x < start_token->x + possible->width ||
+            curr_token->y < start_token->y + possible->height))
+    {
+        if (curr_token->x >= start_token->x &&
+            curr_token->x <= start_token->x + possible->width &&
+            curr_token->y <= start_token->y + possible->height)
+        {
+            cell_info_t cell_info;
+            matrix_config_load_cell_info(curr_token->data, &cell_info);
+
+            size_t offset_x = curr_token->x - start_token->x;
+            if (widths[offset_x] < cell_info.width)
+            {
+                widths[offset_x] = cell_info.width;
+            }
+
+            size_t offset_y = curr_token->y - start_token->y;
+            if (heights[offset_y] < cell_info.height)
+            {
+                heights[offset_y] = cell_info.height;
+            }
+        }
+
+        curr_token = curr_token->next;
+    }
+    return can_show(available, properties, widths, heights, possible);
 }
 
 void matrix_config_get_most_expanded(screen_size_t *available,
@@ -81,80 +125,99 @@ void matrix_config_get_most_expanded(screen_size_t *available,
                                      size_t max_lines,
                                      screen_size_t *used)
 {
-    csv_token *curr_token = start_token;
-    size_t start_column = start_token->x;
-    size_t start_line = start_token->y;
-    size_t widths[max_columns - start_column];
-    size_t heights[max_lines - start_line];
-    for (size_t index = 0; index < (max_columns - start_column); ++index)
+    bool can_grow_xy = true;
+    bool can_grow_x = true;
+    bool can_grow_y = true;
+    while (can_grow_xy || can_grow_x || can_grow_y)
     {
-        widths[index] = 0;
-    }
-
-    for (size_t index = 0; index < (max_lines - start_line); ++index)
-    {
-        heights[index] = 0;
-    }
-
-    while (curr_token)
-    {
-        if (curr_token->x >= start_column && curr_token->y >= start_line && used->height <= available->height)
+        if (can_grow_xy)
         {
-            cell_info_t cell_info;
-            matrix_config_load_cell_info(curr_token->data, &cell_info);
+            screen_size_t next = {
+                .height = used->height + 1,
+                .width = used->width + 1};
 
-            size_t offset_x = curr_token->x - start_column;
-            if (widths[offset_x] < cell_info.width)
+            if (next.width + start_token->x <= max_columns &&
+                next.height + start_token->y <= max_lines &&
+                can_fit(available, properties, start_token, &next))
             {
-                widths[offset_x] = cell_info.width;
+                used->height = next.height;
+                used->width = next.width;
             }
-
-            size_t offset_y = curr_token->y - start_line;
-            if (heights[offset_y] < cell_info.height)
+            else
             {
-                heights[offset_y] = cell_info.height;
-            }
-
-            if (offset_x >= used->width || offset_y >= used->height)
-            {
-                size_t columns = offset_x + 1;
-                size_t lines = offset_y + 1;
-                if (can_show(available, properties, widths, heights, columns, lines))
-                {
-                    used->width = columns;
-                    used->height = lines;
-                }
-                else if (offset_x == 0)
-                {
-                    return;
-                }
+                can_grow_xy = false;
             }
         }
-        curr_token = curr_token->next;
+        else if (can_grow_y)
+        {
+            screen_size_t next = {
+                .height = used->height + 1,
+                .width = used->width};
+
+            if (next.width + start_token->x <= max_columns &&
+                next.height + start_token->y <= max_lines &&
+                can_fit(available, properties, start_token, &next))
+            {
+                used->height = next.height;
+                used->width = next.width;
+            }
+            else
+            {
+                can_grow_y = false;
+            }
+        }
+        else if (can_grow_x)
+        {
+            screen_size_t next = {
+                .height = used->height,
+                .width = used->width + 1};
+
+            if (next.width + start_token->x <= max_columns &&
+                next.height + start_token->y <= max_lines &&
+                can_fit(available, properties, start_token, &next))
+            {
+                used->height = next.height;
+                used->width = next.width;
+            }
+            else
+            {
+                can_grow_x = false;
+            }
+        }
     }
 }
 
 void matrix_config_load_sizes(csv_token *start_token, matrix_config_t *config)
 {
-    csv_token *curr_token = start_token;
-    while (curr_token)
-    {
-        cell_info_t cell_info;
-        matrix_config_load_cell_info(curr_token->data, &cell_info);
-        if (curr_token->x >= start_token->x && curr_token->x < start_token->x + config->columns)
-        {
-            if (config->column_width[curr_token->x - start_token->x] < cell_info.width)
-            {
-                LOGGER_INFO("WIDTH: (%d, %d) -> %d\n", curr_token->x, curr_token->y, config->column_width[curr_token->x - start_token->x]);
-                config->column_width[curr_token->x - start_token->x] = cell_info.width;
-            }
-        }
 
-        if (curr_token->y >= start_token->y && curr_token->y < start_token->y + config->heights)
+    csv_token *curr_token = start_token;
+
+    while (curr_token &&
+           (curr_token->x >= start_token->x ||
+            curr_token->x < start_token->x + config->columns ||
+            curr_token->y < start_token->y + config->heights))
+    {
+        //LOGGER_INFO("Current: (%d, %d)\n", curr_token->x, curr_token->y);
+        if (curr_token->x >= start_token->x &&
+            curr_token->x <= start_token->x + config->columns &&
+            curr_token->y <= start_token->y + config->heights)
         {
-            if (config->line_height[curr_token->y - start_token->y] < cell_info.height)
+            cell_info_t cell_info;
+            matrix_config_load_cell_info(curr_token->data, &cell_info);
+            //LOGGER_INFO("Info: (%d, %d) -> (%d, %d)\n", curr_token->x, curr_token->y, cell_info.width, cell_info.height);
+
+            size_t offset_x = curr_token->x - start_token->x;
+            if (config->column_width[offset_x] < cell_info.width)
             {
-                config->line_height[curr_token->y - start_token->y] = cell_info.height;
+                //LOGGER_INFO("WIDER: width[%d] = %d -> %d\n", offset_x, config->column_width[offset_x], cell_info.width);
+                config->column_width[offset_x] = cell_info.width;
+            }
+
+            size_t offset_y = curr_token->y - start_token->y;
+            if (config->line_height[offset_y] < cell_info.height)
+            {
+                //LOGGER_INFO("WIDER: higher[%d] = %d -> %d\n", offset_x, config->line_height[offset_y], cell_info.height);
+                config->line_height[offset_y] = cell_info.height;
             }
         }
 
