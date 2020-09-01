@@ -87,34 +87,11 @@ bool can_fit(screen_size_t *available, matrix_properties_t *properties, csv_toke
         heights[index] = 0;
     }
 
-    csv_token *curr_token = start_token;
-    while (curr_token &&
-           (curr_token->x >= start_token->x ||
-            curr_token->x < start_token->x + possible->width ||
-            curr_token->y < start_token->y + possible->height))
-    {
-        if (curr_token->x >= start_token->x &&
-            curr_token->x <= start_token->x + possible->width &&
-            curr_token->y <= start_token->y + possible->height)
-        {
-            cell_info_t cell_info;
-            matrix_config_load_cell_info(curr_token->data, &cell_info);
-
-            size_t offset_x = curr_token->x - start_token->x;
-            if (widths[offset_x] < cell_info.width)
-            {
-                widths[offset_x] = cell_info.width;
-            }
-
-            size_t offset_y = curr_token->y - start_token->y;
-            if (heights[offset_y] < cell_info.height)
-            {
-                heights[offset_y] = cell_info.height;
-            }
-        }
-
-        curr_token = curr_token->next;
-    }
+    matrix_config_t config = {.columns = possible->width,
+                              .heights = possible->height,
+                              .column_width = widths,
+                              .line_height = heights};
+    matrix_config_load_sizes(start_token, &config);
     return can_show(available, properties, widths, heights, possible);
 }
 
@@ -197,26 +174,22 @@ void matrix_config_load_sizes(csv_token *start_token, matrix_config_t *config)
             curr_token->x < start_token->x + config->columns ||
             curr_token->y < start_token->y + config->heights))
     {
-        //LOGGER_INFO("Current: (%d, %d)\n", curr_token->x, curr_token->y);
         if (curr_token->x >= start_token->x &&
             curr_token->x <= start_token->x + config->columns &&
             curr_token->y <= start_token->y + config->heights)
         {
-            cell_info_t cell_info;
+            cell_info_t cell_info = {.height = 1, .width = 0};
             matrix_config_load_cell_info(curr_token->data, &cell_info);
-            //LOGGER_INFO("Info: (%d, %d) -> (%d, %d)\n", curr_token->x, curr_token->y, cell_info.width, cell_info.height);
 
             size_t offset_x = curr_token->x - start_token->x;
             if (config->column_width[offset_x] < cell_info.width)
             {
-                //LOGGER_INFO("WIDER: width[%d] = %d -> %d\n", offset_x, config->column_width[offset_x], cell_info.width);
                 config->column_width[offset_x] = cell_info.width;
             }
 
             size_t offset_y = curr_token->y - start_token->y;
             if (config->line_height[offset_y] < cell_info.height)
             {
-                //LOGGER_INFO("WIDER: higher[%d] = %d -> %d\n", offset_x, config->line_height[offset_y], cell_info.height);
                 config->line_height[offset_y] = cell_info.height;
             }
         }
