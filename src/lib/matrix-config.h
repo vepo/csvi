@@ -43,8 +43,8 @@ typedef struct screen_size
     int height;
 } screen_size_t;
 
-void matrix_config_get_most_expanded(screen_size_t *available,
-                                     matrix_properties_t *properties,
+void matrix_config_get_most_expanded(const screen_size_t *available,
+                                     const matrix_properties_t *properties,
                                      csv_token *start_token,
                                      size_t max_lines,
                                      size_t max_columns,

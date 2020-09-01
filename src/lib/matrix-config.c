@@ -76,7 +76,7 @@ bool can_show(const screen_size_t *available,
 bool can_fit(const screen_size_t *available,
              const matrix_properties_t *properties,
              csv_token *start_token,
-             screen_size_t *possible)
+             const screen_size_t *possible)
 {
     size_t widths[possible->width];
     size_t heights[possible->height];
@@ -88,8 +88,8 @@ bool can_fit(const screen_size_t *available,
     return can_show(available, properties, widths, heights, possible);
 }
 
-void matrix_config_get_most_expanded(screen_size_t *available,
-                                     matrix_properties_t *properties,
+void matrix_config_get_most_expanded(const screen_size_t *available,
+                                     const matrix_properties_t *properties,
                                      csv_token *start_token,
                                      size_t max_columns,
                                      size_t max_lines,
