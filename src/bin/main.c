@@ -224,7 +224,7 @@ void paint()
     /**
      * TODO: current_screen is storing all available size on data instead of all available size on screen. This is creating a problem for PAGE_UP/PAGE_DOWN
      **/
-    screen_size_t *scr_config = matrix_presentation_get_screen_size();
+    const screen_size_t *scr_config = matrix_presentation_get_screen_size();
     csv_token *token = csv_reader_get_token(top_cell.x, top_cell.y, open_file);
     current_screen.height = current_screen.width = 1;
     matrix_config_get_most_expanded(scr_config, &m_properties, token, open_file->columns, open_file->lines, &current_screen);
