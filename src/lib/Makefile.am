@@ -17,7 +17,8 @@ noinst_HEADERS = actions.h \
                  buffer-reader.h \
                  matrix-config.h \
                  matrix-presentation.h \
-                 navigation.h
+                 navigation.h \
+                 commands.h
 
 libcsvviewer_base_a_SOURCES = \
                               $(libcsvviewer_base_a_HEADERS) \
@@ -25,4 +26,5 @@ libcsvviewer_base_a_SOURCES = \
                               buffer-reader.c \
                               matrix-config.c \
                               matrix-presentation.c \
-                              navigation.c
+                              navigation.c \
+                              commands.c

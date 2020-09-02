@@ -167,7 +167,7 @@ int main(void)
     int number_failed;
     Suite *s = csv_parser_test_suite();
     SRunner *sr = srunner_create(s);
-    srunner_set_log(sr, "test-output.log");
+    srunner_set_log(sr, "output-csv-parser.log");
     srunner_run_all(sr, CK_VERBOSE);
     number_failed = srunner_ntests_failed(sr);
     srunner_free(sr);
