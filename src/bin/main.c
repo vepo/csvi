@@ -138,7 +138,7 @@ void executor_show_error(char *error_message)
     matrix_presentation_beep();
 }
 
-void executor_exit(int exit_code)
+NORETURN void executor_exit(int exit_code)
 {
     matrix_presentation_exit();
     exit(exit_code);

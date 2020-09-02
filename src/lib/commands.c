@@ -25,7 +25,8 @@ void commands_shutdown()
     regfree(&regex_go_to_cell);
 }
 
-int regmatch2int(regmatch_t *match, char *command)
+int regmatch2int(const regmatch_t *match,
+                 const char *command)
 {
     size_t input_length = match->rm_eo - match->rm_so;
     char *s_value = (char *)malloc(input_length + 1);
@@ -36,17 +37,20 @@ int regmatch2int(regmatch_t *match, char *command)
     return value;
 }
 
-void process_command_go_to_line(char *command, regmatch_t *pmatch)
+void process_command_go_to_line(const char *command,
+                                const regmatch_t *pmatch)
 {
     _executors->go_to_line(regmatch2int(&pmatch[1], command));
 }
 
-void process_command_go_to_column(char *command, regmatch_t *pmatch)
+void process_command_go_to_column(const char *command,
+                                  const regmatch_t *pmatch)
 {
     _executors->go_to_column(regmatch2int(&pmatch[1], command));
 }
 
-void process_command_go_to_cell(char *command, regmatch_t *pmatch)
+void process_command_go_to_cell(const char *command,
+                                const regmatch_t *pmatch)
 {
     _executors->go_to_cell(regmatch2int(&pmatch[1], command),
                            regmatch2int(&pmatch[2], command));
