@@ -16,6 +16,7 @@ typedef struct command_executors
 {
     void (*go_to_line)(size_t);
     void (*go_to_column)(size_t);
+    void (*go_to_cell)(size_t, size_t);
     void (*exit)(int);
     void (*show_error)(char *error_message);
 } command_executors_t;

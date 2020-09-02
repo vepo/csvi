@@ -8,6 +8,7 @@
 int test_commands_counter_exit = 0;
 int test_commands_counter_go_to_column = 0;
 int test_commands_counter_go_to_line = 0;
+int test_commands_counter_go_to_cell = 0;
 int test_commands_counter_show_error = 0;
 int test_commands_last_exit_code = -1;
 int test_commands_last_column = -1;
@@ -19,6 +20,7 @@ void test_commands_mock_reset()
     test_commands_counter_exit = 0;
     test_commands_counter_go_to_column = 0;
     test_commands_counter_go_to_line = 0;
+    test_commands_counter_go_to_cell = 0;
     test_commands_counter_show_error = 0;
     test_commands_last_exit_code = -1;
     test_commands_last_column = -1;
@@ -48,6 +50,13 @@ void test_commands_mock_go_to_line(size_t line)
     test_commands_last_line = line;
 }
 
+void test_commands_mock_go_to_cell(size_t column, size_t line)
+{
+    test_commands_counter_go_to_cell++;
+    test_commands_last_line = line;
+    test_commands_last_column = column;
+}
+
 void test_commands_mock_show_error(char *error_message)
 {
     test_commands_counter_show_error++;
@@ -63,6 +72,7 @@ START_TEST(commands_exit)
         .exit = &test_commands_mocked_exit,
         .go_to_line = &test_commands_mock_go_to_line,
         .go_to_column = &test_commands_mock_go_to_column,
+        .go_to_cell = &test_commands_mock_go_to_cell,
         .show_error = &test_commands_mock_show_error};
     commands_init(&executors);
     commands_execute(":q");
@@ -70,6 +80,7 @@ START_TEST(commands_exit)
     ck_assert_uint_eq(test_commands_last_exit_code, 0);
     ck_assert_uint_eq(test_commands_counter_go_to_column, 0);
     ck_assert_uint_eq(test_commands_counter_go_to_line, 0);
+    ck_assert_uint_eq(test_commands_counter_go_to_cell, 0);
     ck_assert_uint_eq(test_commands_counter_show_error, 0);
     commands_shutdown();
 }
@@ -82,6 +93,7 @@ START_TEST(commands_go_to_line)
         .exit = &test_commands_mocked_exit,
         .go_to_line = &test_commands_mock_go_to_line,
         .go_to_column = &test_commands_mock_go_to_column,
+        .go_to_cell = &test_commands_mock_go_to_cell,
         .show_error = &test_commands_mock_show_error};
     commands_init(&executors);
     commands_execute(":57");
@@ -89,6 +101,7 @@ START_TEST(commands_go_to_line)
     ck_assert_uint_eq(test_commands_last_line, 56);
     ck_assert_uint_eq(test_commands_counter_exit, 0);
     ck_assert_uint_eq(test_commands_counter_go_to_column, 0);
+    ck_assert_uint_eq(test_commands_counter_go_to_cell, 0);
     ck_assert_uint_eq(test_commands_counter_show_error, 0);
     commands_shutdown();
 }
@@ -101,6 +114,7 @@ START_TEST(commands_go_to_column)
         .exit = &test_commands_mocked_exit,
         .go_to_line = &test_commands_mock_go_to_line,
         .go_to_column = &test_commands_mock_go_to_column,
+        .go_to_cell = &test_commands_mock_go_to_cell,
         .show_error = &test_commands_mock_show_error};
     commands_init(&executors);
     commands_execute(":c457");
@@ -108,6 +122,30 @@ START_TEST(commands_go_to_column)
     ck_assert_uint_eq(test_commands_last_column, 456);
     ck_assert_uint_eq(test_commands_counter_exit, 0);
     ck_assert_uint_eq(test_commands_counter_go_to_line, 0);
+    ck_assert_uint_eq(test_commands_counter_go_to_cell, 0);
+    ck_assert_uint_eq(test_commands_counter_show_error, 0);
+    commands_shutdown();
+}
+END_TEST
+
+
+START_TEST(commands_go_to_cell)
+{
+    test_commands_mock_reset();
+    command_executors_t executors = {
+        .exit = &test_commands_mocked_exit,
+        .go_to_line = &test_commands_mock_go_to_line,
+        .go_to_column = &test_commands_mock_go_to_column,
+        .go_to_cell = &test_commands_mock_go_to_cell,
+        .show_error = &test_commands_mock_show_error};
+    commands_init(&executors);
+    commands_execute(":57x32");
+    ck_assert_uint_eq(test_commands_counter_go_to_cell, 1);
+    ck_assert_uint_eq(test_commands_last_column, 56);
+    ck_assert_uint_eq(test_commands_last_line, 31);
+    ck_assert_uint_eq(test_commands_counter_exit, 0);
+    ck_assert_uint_eq(test_commands_counter_go_to_line, 0);
+    ck_assert_uint_eq(test_commands_counter_go_to_column, 0);
     ck_assert_uint_eq(test_commands_counter_show_error, 0);
     commands_shutdown();
 }
@@ -120,14 +158,16 @@ START_TEST(commands_invalid)
         .exit = &test_commands_mocked_exit,
         .go_to_line = &test_commands_mock_go_to_line,
         .go_to_column = &test_commands_mock_go_to_column,
+        .go_to_cell = &test_commands_mock_go_to_cell,
         .show_error = &test_commands_mock_show_error};
     commands_init(&executors);
     commands_execute(":aaaaa");
     ck_assert_uint_eq(test_commands_counter_show_error, 1);
+    ck_assert_str_eq(test_commands_last_shown_error_message, "Unknown command: :aaaaa");
     ck_assert_uint_eq(test_commands_counter_go_to_column, 0);
     ck_assert_uint_eq(test_commands_counter_exit, 0);
     ck_assert_uint_eq(test_commands_counter_go_to_line, 0);
-    ck_assert_str_eq(test_commands_last_shown_error_message, "Unknown command: :aaaaa");
+    ck_assert_uint_eq(test_commands_counter_go_to_cell, 0);
     commands_shutdown();
 }
 END_TEST
@@ -140,6 +180,7 @@ Suite *matrix_test_suite(void)
     tcase_add_test(tc_core, commands_exit);
     tcase_add_test(tc_core, commands_go_to_line);
     tcase_add_test(tc_core, commands_go_to_column);
+    tcase_add_test(tc_core, commands_go_to_cell);
     tcase_add_test(tc_core, commands_invalid);
 
     suite_add_tcase(s, tc_core);

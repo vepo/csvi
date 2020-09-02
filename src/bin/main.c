@@ -93,8 +93,7 @@ void executor_go_to_line(size_t line)
 {
     if (line < open_file->lines)
     {
-        top_cell.y = line;
-        selected_cell.y = line;
+        top_cell.y = selected_cell.y = line;
         matrix_presentation_set_selected(&selected_cell);
         matrix_presentation_flash();
     }
@@ -108,8 +107,22 @@ void executor_go_to_column(size_t column)
 {
     if (column < open_file->columns)
     {
-        top_cell.x = column;
-        selected_cell.x = column;
+        top_cell.x = selected_cell.x = column;
+        matrix_presentation_set_selected(&selected_cell);
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
+void executor_go_to_cell(size_t column, size_t line)
+{
+    if (column < open_file->columns && line < open_file->lines)
+    {
+        top_cell.x = selected_cell.x = column;
+        top_cell.y = selected_cell.y = line;
         matrix_presentation_set_selected(&selected_cell);
         matrix_presentation_flash();
     }
@@ -256,6 +269,8 @@ int main(int argc, char *argv[])
     command_executors_t command_executors = {
         .go_to_line = &executor_go_to_line,
         .go_to_column = &executor_go_to_column,
+        .go_to_cell = &executor_go_to_cell,
+        .show_error = &executor_show_error,
         .exit = &executor_exit};
     commands_init(&command_executors);
     matrix_presentation_init();
