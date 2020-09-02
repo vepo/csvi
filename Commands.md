@@ -24,3 +24,8 @@ The command can be of the type:
 | ":q" | Command | Exit |
 | ":[0-9]" | Command | Go to line |
 | ":c[0-9]" | Command | Go to column |
+| ":[0-9]x[0,9]" | Command | Go to cell, where the column is the first argument and the line the second. |
+| ":0" | Command | Go to the first line | 
+| ":-1" | Command | Go to the last line |
+| ":c0" | Command | Go to the first column |
+| ":c-1" | Command | Go to the last column |

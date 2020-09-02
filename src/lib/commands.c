@@ -66,6 +66,30 @@ void commands_execute(char *command)
             return;
         }
 
+        if (strcmp(":0", command) == 0)
+        {
+            _executors->go_to_first_line();
+            return;
+        }
+
+        if (strcmp(":-1", command) == 0)
+        {
+            _executors->go_to_last_line();
+            return;
+        }
+
+        if (strcmp(":c0", command) == 0)
+        {
+            _executors->go_to_first_column();
+            return;
+        }
+
+        if (strcmp(":c-1", command) == 0)
+        {
+            _executors->go_to_last_column();
+            return;
+        }
+
         regmatch_t pmatch[3];
         if (!regexec(&regex_go_to_line, command, 2, pmatch, 0))
         {

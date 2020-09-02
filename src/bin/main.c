@@ -132,6 +132,62 @@ void executor_go_to_cell(size_t column, size_t line)
     }
 }
 
+void executor_go_to_first_line()
+{
+    if (selected_cell.y > 0)
+    {
+        top_cell.y = selected_cell.y = 0;
+        matrix_presentation_set_selected(&selected_cell);
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
+void executor_go_to_last_line()
+{
+    if (selected_cell.y < open_file->columns)
+    {
+        top_cell.y = selected_cell.y = open_file->columns - 1;
+        matrix_presentation_set_selected(&selected_cell);
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
+void executor_go_to_first_column()
+{
+    if (selected_cell.x > 0)
+    {
+        top_cell.x = selected_cell.x = 0;
+        matrix_presentation_set_selected(&selected_cell);
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
+void executor_go_to_last_column()
+{
+    if (selected_cell.x < open_file->lines)
+    {
+        top_cell.x = selected_cell.x = open_file->lines - 1;
+        matrix_presentation_set_selected(&selected_cell);
+        matrix_presentation_flash();
+    }
+    else
+    {
+        matrix_presentation_beep();
+    }
+}
+
 void executor_show_error(char *error_message)
 {
     matrix_presentation_error(error_message);
@@ -270,6 +326,10 @@ int main(int argc, char *argv[])
         .go_to_line = &executor_go_to_line,
         .go_to_column = &executor_go_to_column,
         .go_to_cell = &executor_go_to_cell,
+        .go_to_first_line = &executor_go_to_first_line,
+        .go_to_last_line = &executor_go_to_last_line,
+        .go_to_first_column = &executor_go_to_first_column,
+        .go_to_last_column = &executor_go_to_last_column,
         .show_error = &executor_show_error,
         .exit = &executor_exit};
     commands_init(&command_executors);
