@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h> /* for getopt_long; POSIX standard getopt is in unistd.h */
-#include <regex.h>
 
 #include "config.h"
 #include "actions.h"
@@ -12,6 +11,7 @@
 #include "matrix-presentation.h"
 #include "matrix-config.h"
 #include "navigation.h"
+#include "commands.h"
 #include "helper.h"
 
 screen_size_t presented_matrix = {.width = 1,
@@ -89,23 +89,8 @@ void end()
     handle_nagivation(navigate_page_next(&top_cell, &selected_cell, &presented_matrix, open_file->columns));
 }
 
-regex_t regex_go_to_line;
-regex_t regex_go_to_column;
-
-void init_commands()
+void executor_go_to_line(size_t line)
 {
-    regcomp(&regex_go_to_line, "^\\:([[:digit:]]+)$", REG_EXTENDED);
-    regcomp(&regex_go_to_column, "^\\:c([[:digit:]]+)$", REG_EXTENDED);
-}
-
-void execute_command_go_to_line(char *command, regmatch_t *pmatch)
-{
-    size_t input_length = pmatch[1].rm_eo - pmatch[1].rm_so;
-    char *go_to_line = (char *)malloc(input_length + 1);
-    go_to_line[input_length] = '\0';
-    strncpy(go_to_line, &command[pmatch[1].rm_so], input_length);
-    int line = atoi(go_to_line) - 1; // zero index
-    free(go_to_line);
     if (line < open_file->lines)
     {
         top_cell.y = line;
@@ -119,14 +104,8 @@ void execute_command_go_to_line(char *command, regmatch_t *pmatch)
     }
 }
 
-void execute_command_go_to_column(char *command, regmatch_t *pmatch)
+void executor_go_to_column(size_t column)
 {
-    size_t input_length = pmatch[1].rm_eo - pmatch[1].rm_so;
-    char *go_to_column = (char *)malloc(input_length + 1);
-    go_to_column[input_length] = '\0';
-    strncpy(go_to_column, &command[pmatch[1].rm_so], input_length);
-    int column = atoi(go_to_column) - 1; // zero index
-    free(go_to_column);
     if (column < open_file->columns)
     {
         top_cell.x = column;
@@ -140,39 +119,21 @@ void execute_command_go_to_column(char *command, regmatch_t *pmatch)
     }
 }
 
-void execute_command(char *command)
+void executor_show_error(char *error_message)
 {
-    if (command[0] == ':')
-    {
-        if (strcmp(":q", command) == 0)
-        {
-            matrix_presentation_exit();
-            exit(0);
-        }
-
-        regmatch_t pmatch[2];
-        if (!regexec(&regex_go_to_line, command, 2, pmatch, 0))
-        {
-            execute_command_go_to_line(command, pmatch);
-            return;
-        }
-
-        if (!regexec(&regex_go_to_column, command, 2, pmatch, 0))
-        {
-            execute_command_go_to_column(command, pmatch);
-            return;
-        }
-    }
-
-    char error_message[255];
-    snprintf(error_message, 255, "Unknown command: %s", command);
     matrix_presentation_error(error_message);
     matrix_presentation_beep();
 }
 
+void executor_exit(int exit_code)
+{
+    matrix_presentation_exit();
+    exit(exit_code);
+}
+
 void command()
 {
-    matrix_presentation_read_command(&execute_command);
+    matrix_presentation_read_command(&commands_execute);
 }
 
 void update_screen(const screen_size_t *scr_config,
@@ -292,12 +253,11 @@ int main(int argc, char *argv[])
     CHECK_FATAL(argc < 2, "No file to read...\n");
     open_file = csv_reader_read_file(argv[argc - 1]);
 
-    csv_token *curr = open_file->first;
-    while (curr)
-    {
-        curr = curr->next;
-    }
-    init_commands();
+    command_executors_t command_executors = {
+        .go_to_line = &executor_go_to_line,
+        .go_to_column = &executor_go_to_column,
+        .exit = &executor_exit};
+    commands_init(&command_executors);
     matrix_presentation_init();
     matrix_presentation_configure_handler(UP, &up);
     matrix_presentation_configure_handler(LEFT, &left);
