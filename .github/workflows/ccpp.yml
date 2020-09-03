@@ -32,6 +32,7 @@ jobs:
         done
     - name: Run Sonar
       run: |
+        VERSION=`./configure --version | head -n 1 | awk '{print $3}'`
         ./sonar-scanner-4.4.0.2170-linux/bin/sonar-scanner -Dsonar.organization=vepo-github \
                                                            -Dsonar.projectKey=csv-viewer \
                                                            -Dsonar.sources=src \
@@ -40,6 +41,7 @@ jobs:
                                                            -Dsonar.branch.name=${BASE_BRANCH} \
                                                            -Dsonar.login=${SONAR_TOKEN} \
                                                            -Dsonar.cfamily.gcov.reportsPath=src \
+                                                           -Dsonar.projectVersion=$VERSION \
                                                            -Dsonar.exclusions=tests/**/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
