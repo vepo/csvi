@@ -1,4 +1,2 @@
-csv_parser_tests
-matrix_tests
-navigation_tests
+*_tests
 *.trs
