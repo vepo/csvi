@@ -242,3 +242,125 @@ void csv_token_dispose(csv_token *token)
         free(token);
     }
 }
+
+#include <sys/stat.h>
+#include <unistd.h>
+#include <libgen.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*********************************************************************
+ * New API
+ *********************************************************************/
+
+char *allocate_and_copy_str(char *src)
+{
+    size_t length = strlen(src);
+    char *dest = (char *)calloc(length, sizeof(char));
+    strncpy(dest, src, length);
+    return dest;
+}
+
+void csv_reader_load_line_metadata(csv_metadata_t *metadata, long int file_length)
+{
+    // go to start of file
+    fseek(metadata->file_handler, 0, SEEK_SET);
+    metadata->columns = metadata->lines = 0;
+    //while (buffer_reader_acquire(reader))
+    //{
+    //    while (buffer_reader_has_data(reader))
+    //    {
+    //        commit_while_isspace(reader);
+    //        if (buffer_reader_has_data(reader))
+    //        {
+    //            if (buffer_reader_current_char(reader, 0) == '"')
+    //            {
+    //                size_t token_end = 2;
+    //                char *token = read_escaped_token(reader, token_end, proceed_escaped_token(reader, &token_end));
+    //
+    //                csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
+    //                current_token->data = token;
+    //                current_token->x = column;
+    //                current_token->y = contents->lines;
+    //                current_token->next = NULL;
+    //
+    //                if (buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != csv_reader_separator)
+    //                {
+    //                    token_end++;
+    //                }
+    //                while (buffer_reader_available(reader) > token_end && isspace(buffer_reader_current_char(reader, token_end)) && buffer_reader_current_char(reader, token_end) != '\n')
+    //                {
+    //                    ++token_end;
+    //                };
+    //                while (buffer_reader_available(reader) > token_end && buffer_reader_current_char(reader, token_end) != csv_reader_separator && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
+    //                {
+    //                    ++token_end;
+    //                };
+    //                column = process_end_of_token(reader, token_end, column, contents);
+    //                proceed_token(contents, current_token, last_token);
+    //                last_token = current_token;
+    //            }
+    //            else
+    //            {
+    //                size_t token_end = 0;
+    //                while ((buffer_reader_available(reader) > token_end || !reader->endReached) && buffer_reader_current_char(reader, token_end) != csv_reader_separator && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
+    //                {
+    //                    ++token_end;
+    //                };
+    //
+    //                int space_pos = count_spaces_previous(reader, token_end);
+    //
+    //                char *token = (char *)malloc(sizeof(char) * (token_end + 1 - space_pos));
+    //                buffer_reader_current_copy(reader, token_end + 1 - space_pos, token);
+    //                csv_token *current_token = (csv_token *)malloc(sizeof(csv_token));
+    //                current_token->data = token;
+    //                current_token->x = column;
+    //                current_token->y = contents->lines;
+    //                current_token->next = NULL;
+    //                column = process_end_of_token(reader, token_end, column, contents);
+    //                proceed_token(contents, current_token, last_token);
+    //                last_token = current_token;
+    //            }
+    //        }
+    //    }
+    //}
+}
+
+csv_metadata_t *csv_reader_open(char *path)
+{
+
+    csv_metadata_t *metadata = (csv_metadata_t *)calloc(1, sizeof(csv_metadata_t));
+
+    // Fill path and filename
+    char *base_path = allocate_and_copy_str(path);
+    metadata->filename = allocate_and_copy_str(basename(base_path));
+    free(base_path);
+    metadata->separator = csv_reader_separator;
+    char *dir_path = allocate_and_copy_str(path);
+    char *pwd_dirname = dirname(dir_path);
+    metadata->directory = realpath(pwd_dirname, NULL);
+    free(dir_path);
+
+    struct stat stats;
+    if (stat(path, &stats) == 0)
+    {
+        metadata->can_read = stats.st_mode & R_OK;
+        metadata->can_write = stats.st_mode & W_OK;
+        if (metadata->can_read)
+        {
+            metadata->file_handler = fopen(path, "r");
+            metadata->status = CSV_STATUS_READ;
+            csv_reader_load_line_metadata(metadata, stats.st_size);
+        }
+        else
+        {
+            metadata->status = CSV_STATUS_NO_READ_PERMISSION;
+        }
+    }
+    else
+    {
+        metadata->file_handler = NULL;
+        metadata->status = CSV_STATUS_FILE_NOT_FOUND;
+    }
+    return metadata;
+}
