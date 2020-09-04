@@ -30,23 +30,27 @@ libmock_a_SOURCES = \
 TESTS = csv_parser_tests \
         commands_tests \
         matrix_tests \
-        navigation_tests
+        navigation_tests \
+        test_csv_reader
 
 check_PROGRAMS = csv_parser_tests \
                  commands_tests \
                  matrix_tests \
-                 navigation_tests
+                 navigation_tests \
+                 test_csv_reader
 
 if DEBUG
   csv_parser_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
   commands_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
   matrix_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
   navigation_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
+  test_csv_reader_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -g -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
 else
   csv_parser_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
   commands_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
   matrix_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
   navigation_tests_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
+  test_csv_reader_CFLAGS =-I$(top_srcdir)/src/bin -I$(top_srcdir)/src/lib -Wall -O3 @CHECK_CFLAGS@ $(COVERAGE_CFLAG)
 endif
 
 csv_parser_tests_LDFLAGS = $(COVERAGE_LDFLAG)
@@ -64,3 +68,7 @@ matrix_tests_LDADD = $(top_builddir)/src/lib/*.o libmock.a $(AM_LDFLAGS) @CURSES
 navigation_tests_LDFLAGS = $(COVERAGE_LDFLAG)
 navigation_tests_SOURCES = navigation-tests.c
 navigation_tests_LDADD = $(top_builddir)/src/lib/*.o libmock.a $(AM_LDFLAGS) @CURSES_LIBS@  @CHECK_LIBS@
+
+test_csv_reader_LDFLAGS = $(COVERAGE_LDFLAG)
+test_csv_reader_SOURCES = test-csv-reader.c
+test_csv_reader_LDADD = $(top_builddir)/src/lib/*.o libmock.a $(AM_LDFLAGS) @CURSES_LIBS@  @CHECK_LIBS@

@@ -1,5 +1,6 @@
 #include "mock-token.h"
 #include <string.h>
+#include <stdlib.h>
 
 csv_token *mock_token(size_t y, size_t x, char *data, csv_token *start)
 {

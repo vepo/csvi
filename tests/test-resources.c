@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <check.h>
+#include <stdlib.h>
 
 #define LINE_BREAK_CONTENTS "Description;value1;value 2;\"value;\";\"value 5\"\"\"\n\
 This is a csv file;\"Value with line\n\
