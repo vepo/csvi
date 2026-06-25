@@ -35,7 +35,7 @@ jobs:
             cd -
         done
     - name: Run Sonar
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         VERSION=$(./configure --version | head -n 1 | awk '{print $3}')
         ./sonar-scanner-7.0.2.4839-linux-x64/bin/sonar-scanner \
