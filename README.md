@@ -1,9 +1,9 @@
 # CSVI
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=csv-viewer&metric=alert_status)](https://sonarcloud.io/dashboard?id=csv-viewer)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=csv-viewer&metric=bugs)](https://sonarcloud.io/dashboard?id=csv-viewer)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=csv-viewer&metric=code_smells)](https://sonarcloud.io/dashboard?id=csv-viewer)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=csv-viewer&metric=coverage)](https://sonarcloud.io/dashboard?id=csv-viewer)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=vepo_csvi&metric=alert_status)](https://sonarcloud.io/dashboard?id=vepo_csvi)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=vepo_csvi&metric=bugs)](https://sonarcloud.io/dashboard?id=vepo_csvi)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=vepo_csvi&metric=code_smells)](https://sonarcloud.io/dashboard?id=vepo_csvi)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=vepo_csvi&metric=coverage)](https://sonarcloud.io/dashboard?id=vepo_csvi)
 
 CSV Viewer for the Linux command line. Navigate by cell with arrow keys or `hjkl`; use `:` for commands and `/` for search. A status bar shows row, column, and mode.
 

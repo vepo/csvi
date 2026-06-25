@@ -45,7 +45,8 @@ AC_ARG_ENABLE([coverage],
   [coverage=false])
 AM_CONDITIONAL([COVERAGE], [test x"$coverage" = x"true"])
 AS_IF([test x"$coverage" = x"true"],
-  [AC_DEFINE([COVERAGE], [1], [Define to 1 for coverage builds])],
+  [AC_DEFINE([COVERAGE], [1], [Define to 1 for coverage builds])
+   CFLAGS="$CFLAGS -g -O0"],
   [AC_DEFINE([COVERAGE], [0], [Define to 0 when coverage is disabled])])
 
 AC_FUNC_MALLOC

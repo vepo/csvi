@@ -165,7 +165,7 @@ The CI workflow uploads the source tarball, `.deb`, `.rpm`, `.apk`, and the shel
 
 ## Continuous integration
 
-The [`.github/workflows/ccpp.yml`](../.github/workflows/ccpp.yml) pipeline runs:
+The [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) pipeline runs:
 
 | Job | Purpose |
 |-----|---------|

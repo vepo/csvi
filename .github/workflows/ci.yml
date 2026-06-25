@@ -62,9 +62,7 @@ jobs:
         run: |
           build-wrapper-linux-x86-64 --out-dir "${{ env.BUILD_WRAPPER_OUT_DIR }}" make clean
           build-wrapper-linux-x86-64 --out-dir "${{ env.BUILD_WRAPPER_OUT_DIR }}" make -j"$(nproc)" check
-          find src -name '*.c' -print0 | while IFS= read -r -d '' source_file; do
-            (cd "$(dirname "$source_file")" && gcov "$(basename "$source_file")") || true
-          done
+          bash .github/scripts/generate-gcov-reports.sh
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
