@@ -1,0 +1,31 @@
+---
+description: What to test and how, by layer
+globs: src/lib/**,tests/**
+alwaysApply: false
+---
+
+# Testing policy
+
+Non-UI logic changes require tests. Run `make check` before finishing.
+
+| Layer | Required? | Approach |
+|-------|-----------|----------|
+| `io/` | Yes | Check unit tests |
+| `layout/` | Yes | Check unit tests |
+| `nav/` | Yes | Check unit tests |
+| `cmd/` | Yes | Check unit tests |
+| `app/` | Yes for wiring | Integration-style (`viewer-tests.c`) |
+| `ui/` | No direct tests | Extract testable logic to lower layers |
+
+## Conventions
+
+- Test file mirrors module: `csv-reader.c` → `csv-parser-tests.c`, `navigation.c` → `navigation-tests.c`.
+- Shared fixtures: `tests/mock-token.*`, `tests/test-resources.*`.
+- Register new tests in `tests/Makefile.am` (`check_PROGRAMS` and `TESTS`).
+
+```bash
+make check                    # full suite
+./configure --enable-coverage && make check   # with coverage
+```
+
+Do not merge non-UI logic changes without corresponding tests.

@@ -1,0 +1,34 @@
+---
+description: Header guards, include order, and minimal public API
+globs: src/**/*.{c,h}
+alwaysApply: false
+---
+
+# Header conventions
+
+## Include guards
+
+Use `CSVI_<MODULE>_<FILE>_H_` (e.g. `CSVI_CSV_READER_H_`, `CSVI_VIEWER_H_`).
+
+## Include order in `.c` files
+
+1. Own module header first
+2. System headers (`<stdio.h>`, etc.)
+3. Project headers (`"io/csv-reader.h"`, etc.)
+
+## Cross-module paths
+
+Build adds `-I$(top_srcdir)/src/lib`. Always use layer-prefixed paths:
+
+```c
+#include "io/csv-reader.h"
+#include "layout/types.h"
+```
+
+Never use relative paths like `#include "../io/csv-reader.h"`.
+
+## Minimal surface
+
+- Headers expose only the public API; keep helpers `static` in `.c`.
+- No ncurses types (`WINDOW`, etc.) in non-`ui/` headers.
+- Prefer forward declarations over including heavy headers when a pointer suffices.

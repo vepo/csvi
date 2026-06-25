@@ -1,0 +1,28 @@
+---
+description: Keep changes focused and preserve project structure
+alwaysApply: true
+---
+
+# Change scope
+
+## Structural changes
+
+- Do not add a new module under `src/lib/` without updating [docs/architecture.md](docs/architecture.md) (diagram, module table, ownership).
+- Prefer extending an existing layer over creating catch-all folders (`utils/`, `misc/`, `helpers/`).
+- Read [docs/architecture.md](docs/architecture.md) before editing module boundaries or data flow.
+
+## Thin boundaries
+
+- **`main.c`**: argument parsing, usage, mapping errors to exit codes — no business logic.
+- **`app/`**: orchestration and viewer state — delegate parsing to `io/`, rendering to `ui/`, movement to `nav/`.
+- Extract testable logic into `nav/`, `cmd/`, `layout/`, or `io/` rather than testing ncurses directly.
+
+## User-facing sync
+
+- CLI flag or exit code change → `man/csvi.1` and `docs/architecture.md`.
+- Key binding or `:` command change → [Commands.md](Commands.md).
+
+## General
+
+- Minimize diff scope — do not refactor unrelated code in the same change.
+- Match existing naming, error handling, and file layout in the surrounding module.

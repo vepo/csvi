@@ -1,0 +1,38 @@
+---
+description: Memory ownership, lifecycle pairs, and error propagation in C
+globs: src/**/*.{c,h}
+alwaysApply: false
+---
+
+# Memory and ownership
+
+See the ownership table in [docs/architecture.md](docs/architecture.md). Every allocation has one owner and one dispose path.
+
+## Lifecycle pairs
+
+| Allocate / init | Free / shutdown |
+|-----------------|-----------------|
+| `csvi_viewer_create` | `csvi_viewer_destroy` |
+| `csv_reader_read_file` | `csv_contents_dispose` |
+| `matrix_config_initialize` | `matrix_config_dispose` |
+| `commands_init` | `commands_shutdown` |
+| `matrix_presentation_init` | `matrix_presentation_exit` / `matrix_presentation_shutdown` |
+
+New resources must follow the same pattern: `*_create`/`*_init` paired with `*_destroy`/`*_dispose`/`*_shutdown`.
+
+## Rules
+
+- Every `malloc`/`calloc` has a matching `free` on **all** paths (including early returns).
+- Library code under `src/lib/` never calls `exit()` — return error codes or NULL.
+- I/O failures: return NULL and fill `errbuf`, or return an `int` that `main` maps to `CSVI_EXIT_*`.
+- Prefer opaque types for public state (`typedef struct csvi_viewer_t csvi_viewer_t` in header; definition in `.c`).
+
+```c
+// BAD — caller cannot free or handle error
+csv_contents *load(const char *path) {
+    if (!fp) exit(1);
+}
+
+// GOOD — caller owns result and gets a message
+csv_contents *csv_reader_read_file(const char *path, char *errbuf, size_t errbuf_len);
+```

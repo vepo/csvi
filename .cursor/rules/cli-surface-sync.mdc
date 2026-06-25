@@ -1,0 +1,25 @@
+---
+description: Keep CLI flags, exit codes, and user docs in sync
+globs: src/bin/**,man/**,Commands.md,src/lib/common/errors.h
+alwaysApply: false
+---
+
+# CLI surface sync
+
+When adding or changing flags, exit codes, or commands, update **all** of these in the same change:
+
+| Artifact | What to update |
+|----------|----------------|
+| `src/bin/main.c` | `getopt_long` options, `usage()`, validation |
+| `src/lib/common/errors.h` | New `CSVI_EXIT_*` constants |
+| `man/csvi.1` | OPTIONS, COMMANDS, EXIT STATUS |
+| `docs/architecture.md` | CLI surface and exit-code tables |
+| `Commands.md` | Key bindings and `:` commands (if changed) |
+
+## Boundaries
+
+- Only `main.c` returns process exit codes (`return CSVI_EXIT_*`).
+- Library functions return `int` status or NULL; `main` or `csvi_viewer_*` maps them to exit codes.
+- `--help` and `--version` write to stdout; errors and `--verbose` diagnostics go to stderr.
+
+Do not add CLI flags without updating the man page.

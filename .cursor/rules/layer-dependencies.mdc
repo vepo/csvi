@@ -1,0 +1,38 @@
+---
+description: Enforce acyclic layer dependencies under src/lib/
+alwaysApply: true
+---
+
+# Layer dependencies
+
+CSVI is layered. Dependencies flow **downward only** — never upward or sideways across peers.
+
+```
+common → (no internal deps)
+io     → common
+layout → common, io (types only where needed)
+nav    → layout/types only — pure logic, no UI
+cmd    → common — no UI, no app state
+ui     → common, layout — ncurses stays here
+app    → all lower layers — orchestration only
+bin    → app, common — CLI parsing only
+```
+
+## Forbidden includes
+
+| Module | Must NOT include |
+|--------|------------------|
+| `common/` | any other `src/lib/*` header |
+| `io/` | `ui/`, `nav/`, `app/`, `cmd/` |
+| `layout/` | `ui/`, `nav/`, `app/`, `cmd/` |
+| `nav/` | `ui/`, `app/`, `cmd/` |
+| `cmd/` | `ui/`, `app/`, `nav/` |
+| `ui/` | `app/`, `cmd/` |
+
+## Hard boundaries
+
+- Only `src/bin/main.c` may parse `argv` or call `getopt_long`.
+- Only `src/lib/ui/` may `#include <curses.h>`.
+- `nav/` and `cmd/` stay pure — no ncurses, no viewer state.
+
+If a change requires breaking these rules, extract shared logic into a lower layer first.

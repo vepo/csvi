@@ -1,0 +1,32 @@
+---
+description: Where new code belongs and naming conventions per layer
+globs: src/**/*
+alwaysApply: false
+---
+
+# Module placement
+
+| Change type | Directory | Prefix / pattern |
+|-------------|-----------|------------------|
+| Exit codes, logging, macros | `common/` | `csvi_log_*`, `CSVI_EXIT_*` |
+| File/buffer/CSV parsing | `io/` | `csv_reader_*`, `buffer_reader_*` |
+| Viewport/cell sizing, coordinates | `layout/` | `matrix_config_*`, `coordinates_t` |
+| Cursor movement (pure) | `nav/` | `navigation_*` |
+| `:` command regex/dispatch | `cmd/` | `commands_*` |
+| ncurses rendering/input | `ui/` | `matrix_presentation_*` |
+| Viewer state, paint loop, wiring | `app/` | `csvi_viewer_*` |
+| Flags, usage, process exit | `bin/main.c` | — |
+
+## File conventions
+
+- **Filenames**: kebab-case (`csv-reader.c`, `matrix-config.h`).
+- **Symbols**: snake_case for functions, types, and struct fields.
+- **One primary `.c`/`.h` pair** per concern; keep helpers `static` in `.c` unless shared within the layer.
+- **Public API** lives in the module header; implementation details stay in `.c`.
+
+## Coordinates
+
+- width / column → `x`
+- height / CSV line index → `y`
+
+Do not add cross-cutting folders like `utils/` or `misc/` — extend the correct layer instead.

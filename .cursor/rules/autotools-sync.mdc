@@ -1,0 +1,27 @@
+---
+description: Update Makefile.am when adding or renaming source files
+globs: src/**,tests/**,**/Makefile.am
+alwaysApply: false
+---
+
+# Autotools sync
+
+When adding, removing, or renaming files under `src/` or `tests/`:
+
+1. **`src/lib/Makefile.am`** — add to `noinst_HEADERS` and the correct `*_SOURCES` list:
+   - Core modules → `libcsvviewer_core_a_SOURCES`
+   - App layer → `libcsvviewer_base_a_SOURCES`
+2. **`src/bin/Makefile.am`** — update if binary link dependencies change.
+3. **`tests/Makefile.am`** — add to `check_PROGRAMS`, `TESTS`, and the test source list.
+
+## Verify
+
+```bash
+autoreconf -ivf
+./configure
+make check
+```
+
+Do not leave orphan `.c` files on disk without a matching `Makefile.am` entry — builds will fail on clean checkouts.
+
+New headers under `src/lib/` must appear in `noinst_HEADERS`.
