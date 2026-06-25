@@ -15,6 +15,7 @@ typedef struct viewport_cache
 } viewport_cache_t;
 
 viewport_cache_t *viewport_cache_build(const csv_contents *contents);
+void viewport_cache_update_cell(viewport_cache_t *cache, const csv_contents *contents, size_t x, size_t y);
 void viewport_cache_dispose(viewport_cache_t *cache);
 size_t viewport_cache_col_width(const viewport_cache_t *cache, size_t col);
 size_t viewport_cache_row_height(const viewport_cache_t *cache, size_t row);

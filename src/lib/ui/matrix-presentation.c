@@ -20,6 +20,7 @@ enum
     COLOR_PAIR_EVEN = 1,
     COLOR_PAIR_ODD = 2,
     COLOR_PAIR_SELECTED = 3,
+    COLOR_PAIR_EDITING = 4,
 };
 
 static bool use_color(void)
@@ -75,6 +76,7 @@ void matrix_presentation_init(const matrix_display_options_t *options)
         init_pair(COLOR_PAIR_EVEN, COLOR_BLACK, COLOR_WHITE);
         init_pair(COLOR_PAIR_ODD, COLOR_WHITE, COLOR_BLACK);
         init_pair(COLOR_PAIR_SELECTED, COLOR_BLACK, COLOR_GREEN);
+        init_pair(COLOR_PAIR_EDITING, COLOR_BLACK, COLOR_CYAN);
     }
 
     noecho();
@@ -171,21 +173,32 @@ static void calculate_offsets(const coordinates_t *cell,
     }
 }
 
-static chtype cell_display_attrs(size_t abs_x, size_t abs_y, bool selected, bool search_match)
+static chtype cell_display_attrs(size_t abs_x, size_t abs_y, cell_draw_state_t state, bool search_match)
 {
     if (use_color())
     {
-        int pair = selected ? COLOR_PAIR_SELECTED
-                            : ((abs_x + abs_y) % 2 == 0 ? COLOR_PAIR_ODD : COLOR_PAIR_EVEN);
+        int pair;
+        if (state == CELL_DRAW_EDITING)
+        {
+            pair = COLOR_PAIR_EDITING;
+        }
+        else if (state == CELL_DRAW_SELECTED)
+        {
+            pair = COLOR_PAIR_SELECTED;
+        }
+        else
+        {
+            pair = (abs_x + abs_y) % 2 == 0 ? COLOR_PAIR_ODD : COLOR_PAIR_EVEN;
+        }
         chtype attrs = COLOR_PAIR(pair);
-        if (search_match && !selected)
+        if (search_match && state == CELL_DRAW_NORMAL)
         {
             attrs |= A_UNDERLINE;
         }
         return attrs;
     }
 
-    if (selected)
+    if (state == CELL_DRAW_EDITING || state == CELL_DRAW_SELECTED)
     {
         return A_REVERSE;
     }
@@ -207,8 +220,9 @@ void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
                                    size_t abs_x,
                                    size_t abs_y,
                                    const char *data,
-                                   bool selected,
+                                   cell_draw_state_t state,
                                    bool search_match,
+                                   size_t edit_cursor_pos,
                                    const matrix_config_t *config,
                                    const matrix_properties_t *properties)
 {
@@ -230,9 +244,9 @@ void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
     int py = position.y;
     int px = position.x;
 
-    chtype attrs = cell_display_attrs(abs_x, abs_y, selected, search_match);
+    chtype attrs = cell_display_attrs(abs_x, abs_y, state, search_match);
 
-    if (use_color() || selected)
+    if (use_color() || state != CELL_DRAW_NORMAL)
     {
         fill_cell_area(py, px, cell_h, cell_w, attrs);
     }
@@ -249,6 +263,24 @@ void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
     {
         mvwvline(grid_window, py, px - 1, '|', cell_h);
     }
+
+    if (state == CELL_DRAW_EDITING && grid_window)
+    {
+        int cursor_screen_y = properties->margin_top + py + (int)properties->cell_padding_top;
+        int cursor_screen_x = properties->margin_left + px + (int)properties->cell_padding_left + (int)edit_cursor_pos;
+        matrix_presentation_show_cell_cursor(cursor_screen_y, cursor_screen_x);
+    }
+}
+
+void matrix_presentation_show_cell_cursor(int screen_y, int screen_x)
+{
+    curs_set(1);
+    move(screen_y, screen_x);
+}
+
+void matrix_presentation_hide_cursor(void)
+{
+    curs_set(0);
 }
 
 void matrix_presentation_run(matrix_key_handler_t handler)

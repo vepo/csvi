@@ -84,6 +84,33 @@ void cell_commands_execute(const char *command_raw)
         return;
     }
 
+    if (strcmp(command, "q!") == 0 || strcmp(command, "quit!") == 0)
+    {
+        if (executors->exit_force)
+        {
+            executors->exit_force(0);
+        }
+        return;
+    }
+
+    if (strcmp(command, "w") == 0 || strcmp(command, "write") == 0)
+    {
+        if (executors->save_file)
+        {
+            executors->save_file();
+        }
+        return;
+    }
+
+    if (strcmp(command, "wq") == 0)
+    {
+        if (executors->save_file && executors->save_file() == 0)
+        {
+            executors->exit(0);
+        }
+        return;
+    }
+
     if (strcmp(command, "top") == 0)
     {
         executors->go_to_first_line();

@@ -34,6 +34,8 @@ void csvi_viewer_destroy(csvi_viewer_t *viewer);
 const coordinates_t *csvi_viewer_selected_cell(const csvi_viewer_t *viewer);
 void csvi_viewer_exec_go_to_last_line(csvi_viewer_t *viewer);
 void csvi_viewer_exec_go_to_last_column(csvi_viewer_t *viewer);
+int csvi_viewer_test_commit_at(csvi_viewer_t *viewer, size_t x, size_t y, const char *value);
+bool csvi_viewer_file_modified(const csvi_viewer_t *viewer);
 csvi_viewer_t *csvi_viewer_create_with_file(const csv_contents *file);
 #endif
 

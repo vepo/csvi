@@ -29,6 +29,8 @@ static const char *mode_label(input_mode_t mode)
         return "SEARCH";
     case INPUT_HELP:
         return "HELP";
+    case INPUT_INSERT:
+        return "INSERT";
     default:
         return "NORMAL";
     }
@@ -41,6 +43,7 @@ void status_bar_draw(const char *filename,
                      size_t total_cols,
                      char separator,
                      input_mode_t mode,
+                     bool file_modified,
                      const char *line_text,
                      const char *message)
 {
@@ -53,16 +56,33 @@ void status_bar_draw(const char *filename,
     clrtoeol();
     attron(A_REVERSE);
     char left[160];
-    snprintf(left,
-             sizeof(left),
-             " %s | row %zu/%zu | col %zu/%zu | sep %c | %s ",
-             filename ? filename : "-",
-             row + 1,
-             total_rows,
-             col + 1,
-             total_cols,
-             separator,
-             mode_label(mode));
+    const char *name = filename ? filename : "-";
+    if (file_modified)
+    {
+        snprintf(left,
+                 sizeof(left),
+                 " %s* | row %zu/%zu | col %zu/%zu | sep %c | %s ",
+                 name,
+                 row + 1,
+                 total_rows,
+                 col + 1,
+                 total_cols,
+                 separator,
+                 mode_label(mode));
+    }
+    else
+    {
+        snprintf(left,
+                 sizeof(left),
+                 " %s | row %zu/%zu | col %zu/%zu | sep %c | %s ",
+                 name,
+                 row + 1,
+                 total_rows,
+                 col + 1,
+                 total_cols,
+                 separator,
+                 mode_label(mode));
+    }
     printw("%s", left);
     attroff(A_REVERSE);
 

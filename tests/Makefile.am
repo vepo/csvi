@@ -30,6 +30,7 @@ libmock_a_SOURCES = \
 ## Tests Rules
 
 TESTS = csv_parser_tests \
+        csv_writer_tests \
         cell_commands_tests \
         matrix_tests \
         navigation_tests \
@@ -39,6 +40,7 @@ TESTS = csv_parser_tests \
         search_tests
 
 check_PROGRAMS = csv_parser_tests \
+                 csv_writer_tests \
                  cell_commands_tests \
                  matrix_tests \
                  navigation_tests \
@@ -53,6 +55,7 @@ TEST_LDADD = $(top_builddir)/src/lib/libcsvviewer-core.a libmock.a $(AM_LDFLAGS)
 
 if DEBUG
   csv_parser_tests_CFLAGS = $(TEST_CFLAGS) -g
+  csv_writer_tests_CFLAGS = $(TEST_CFLAGS) -g
   cell_commands_tests_CFLAGS = $(TEST_CFLAGS) -g
   matrix_tests_CFLAGS = $(TEST_CFLAGS) -g
   navigation_tests_CFLAGS = $(TEST_CFLAGS) -g
@@ -62,6 +65,7 @@ if DEBUG
   viewer_tests_CFLAGS = $(TEST_CFLAGS) -g -DCSVI_TEST
 else
   csv_parser_tests_CFLAGS = $(TEST_CFLAGS)
+  csv_writer_tests_CFLAGS = $(TEST_CFLAGS)
   cell_commands_tests_CFLAGS = $(TEST_CFLAGS)
   matrix_tests_CFLAGS = $(TEST_CFLAGS)
   navigation_tests_CFLAGS = $(TEST_CFLAGS)
@@ -74,6 +78,10 @@ endif
 csv_parser_tests_LDFLAGS = $(TEST_LDFLAGS)
 csv_parser_tests_SOURCES = csv-parser-tests.c
 csv_parser_tests_LDADD = $(TEST_LDADD)
+
+csv_writer_tests_LDFLAGS = $(TEST_LDFLAGS)
+csv_writer_tests_SOURCES = csv-writer-tests.c
+csv_writer_tests_LDADD = $(TEST_LDADD)
 
 cell_commands_tests_LDFLAGS = $(TEST_LDFLAGS)
 cell_commands_tests_SOURCES = cell-commands-test.c
