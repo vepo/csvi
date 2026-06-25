@@ -1,5 +1,3 @@
-AUTOMAKE_OPTIONS = subdir-objects
-
 if COVERAGE
   COVERAGE_CFLAG = -ftest-coverage -fprofile-arcs
 else
@@ -22,6 +20,7 @@ noinst_HEADERS = \
   common/log.h \
   io/buffer-reader.h \
   io/csv-reader.h \
+  io/csv-writer.h \
   layout/types.h \
   layout/matrix-config.h \
   layout/viewport-cache.h \
@@ -40,6 +39,7 @@ libcsvviewer_core_a_SOURCES = \
   common/log.c \
   io/buffer-reader.c \
   io/csv-reader.c \
+  io/csv-writer.c \
   layout/matrix-config.c \
   layout/viewport-cache.c \
   ui/matrix-presentation.c \

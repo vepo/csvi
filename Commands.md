@@ -17,12 +17,35 @@ CSVI is a cell-grid viewer: navigation moves one cell at a time, the status bar 
 | `Ctrl+H` | Page left (horizontal scroll) |
 | `Ctrl+L` | Page right (horizontal scroll) |
 | `Enter` | Echo full cell value in status bar |
+| `i` / `Insert` | Enter INSERT mode on current cell |
 | `:` | Command mode |
 | `/` | Search mode |
 | `?` | Help overlay |
 | `n` / `N` | Next / previous search match |
 | `q` | Quit |
-| `Esc` | Cancel command/search; close help |
+| `Esc` | Cancel command/search; close help; cancel cell edit |
+
+## Editing (INSERT mode)
+
+Press `i` or `Insert` on the selected cell to edit in place. The cell uses a distinct color (cyan when color is enabled). A full-width **edit preview** line appears above the status bar with horizontal scroll (`<` / `>`), cursor position (`EDIT n/m`), and underlined changed characters (`*` when modified).
+
+| Key | INSERT mode |
+|-----|-------------|
+| Type / Backspace | Edit cell text |
+| `←` / `→` | Move cursor within the cell |
+| `Enter` | Commit cell to memory (marks file modified) |
+| `Esc` | Cancel edit (restore value from when edit started) |
+| Navigation keys | Blocked until you commit or cancel |
+
+Committed changes stay in memory until you write the file. The status bar shows `filename*` when the file has unsaved changes.
+
+| Command | Action |
+|---------|--------|
+| `:w` / `:write` | Write file to disk |
+| `:wq` | Write file and quit |
+| `:q!` / `:quit!` | Quit without saving |
+
+Read-only files (no write permission) cannot be edited.
 
 ## Command mode (`:`)
 
@@ -30,7 +53,10 @@ Commands use **1-based** row and column numbers (internally converted to 0-based
 
 | Command | Action |
 |---------|--------|
-| `:q` / `:quit` | Exit |
+| `:q` / `:quit` | Exit (error if file modified) |
+| `:w` / `:write` | Write file to disk |
+| `:wq` | Write file and quit |
+| `:q!` / `:quit!` | Quit without saving |
 | `:line N` | Go to row N |
 | `:col N` | Go to column N |
 | `:cell ROW,COL` | Go to cell (e.g. `:cell 42,3`) |
@@ -56,7 +82,7 @@ Commands use **1-based** row and column numbers (internally converted to 0-based
 | Flag | Description |
 |------|-------------|
 | `-s`, `--separator=CHAR` | Cell separator (default `;`) |
-| `--color=auto\|never\|always` | Color mode (default `auto`; respects `NO_COLOR`). When on, cells use alternating backgrounds and the selection is green. |
+| `--color=auto\|never\|always` | Color mode (default `auto`; respects `NO_COLOR`). When on, cells use alternating backgrounds; selection is green; editing cell is cyan. |
 | `--grid` | Draw `\|` column separators |
 | `--header` | Freeze row 0 as header |
 | `-V`, `--verbose` | Log diagnostics to stderr |

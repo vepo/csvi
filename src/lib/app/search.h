@@ -17,5 +17,6 @@ bool csvi_search_prev(csvi_search_t *search, coordinates_t *match);
 size_t csvi_search_match_count(const csvi_search_t *search);
 size_t csvi_search_match_index(const csvi_search_t *search);
 const char *csvi_search_pattern(const csvi_search_t *search);
+void csvi_search_refresh(csvi_search_t *search);
 
 #endif

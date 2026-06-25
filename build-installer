@@ -1,6 +1,7 @@
 #!/bin/bash
+set -euo pipefail
 
-autoreconf -ivf
+./bootstrap
 ./configure
 make dist
 echo "Creating installer..."

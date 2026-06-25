@@ -17,7 +17,8 @@ When color is enabled
 .RB ( \-\-color=auto
 by default, or
 .B \-\-color=always ),
-cells use alternating light/dark backgrounds and the selected cell is highlighted in green.
+cells use alternating light/dark backgrounds and the selected cell is highlighted in green;
+the cell being edited is highlighted in cyan.
 Use
 .B \-\-color=never
 or
@@ -71,6 +72,12 @@ Page up.
 .B g / G
 First / last row.
 .TP
+.B Enter
+Show full cell value in the status bar.
+.TP
+.B i / Insert
+Enter INSERT mode on the current cell.
+.TP
 .B :
 Enter command mode.
 .TP
@@ -84,14 +91,33 @@ Help overlay.
 Next / previous search match.
 .TP
 .B q
-Quit.
+Quit (refuses if file has unsaved changes).
+.TP
+.B Esc
+Cancel command/search input, close help, or cancel cell edit.
+.SS INSERT mode
+While editing a cell, type to change the value;
+.B Enter
+commits to memory,
+.B Esc
+cancels, and navigation keys are blocked until you commit or cancel.
+Left/right arrows move the cursor within the cell.
 .SH COMMANDS
 Press
 .B :
 then type a command (1-based row/column numbers):
 .TP
 .B :q
-Quit.
+Quit (error if the file was modified since last write).
+.TP
+.B :w
+Write file to disk.
+.TP
+.B :wq
+Write file and quit.
+.TP
+.B :q!
+Quit without saving.
 .TP
 .BI :line " N"
 Go to row \fIN\fR.

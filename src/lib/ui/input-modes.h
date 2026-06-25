@@ -6,7 +6,8 @@ typedef enum input_mode
     INPUT_NORMAL = 0,
     INPUT_COMMAND = 1,
     INPUT_SEARCH = 2,
-    INPUT_HELP = 3
+    INPUT_HELP = 3,
+    INPUT_INSERT = 4
 } input_mode_t;
 
 input_mode_t input_mode_get(void);

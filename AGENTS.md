@@ -5,7 +5,7 @@ CSVI is a terminal CSV viewer for Linux (`csvi` binary), built in C with ncurses
 ## Build and test
 
 ```bash
-autoreconf -ivf
+./bootstrap
 ./configure
 make
 make check
@@ -17,6 +17,8 @@ Coverage build:
 ./configure --enable-coverage
 make check
 ```
+
+Full instructions: [docs/build.md](docs/build.md).
 
 ## Architecture
 

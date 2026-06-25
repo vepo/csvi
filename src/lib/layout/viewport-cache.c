@@ -69,6 +69,57 @@ viewport_cache_t *viewport_cache_build(const csv_contents *contents)
     return cache;
 }
 
+static void viewport_cache_recompute_column(viewport_cache_t *cache, const csv_contents *contents, size_t x)
+{
+    size_t max_width = 0;
+    for (size_t row = 0; row < cache->lines; ++row)
+    {
+        csv_token *token = csv_reader_get_token(x, row, contents);
+        if (!token || !token->data)
+        {
+            continue;
+        }
+        cell_info_t info = {.width = 0, .height = 1};
+        matrix_config_load_cell_info(token->data, &info);
+        if (info.width > max_width)
+        {
+            max_width = info.width;
+        }
+    }
+    cache->col_width[x] = max_width > 0 ? max_width : 1;
+}
+
+static void viewport_cache_recompute_row(viewport_cache_t *cache, const csv_contents *contents, size_t y)
+{
+    size_t max_height = 0;
+    for (size_t col = 0; col < cache->columns; ++col)
+    {
+        csv_token *token = csv_reader_get_token(col, y, contents);
+        if (!token || !token->data)
+        {
+            continue;
+        }
+        cell_info_t info = {.width = 0, .height = 1};
+        matrix_config_load_cell_info(token->data, &info);
+        if (info.height > max_height)
+        {
+            max_height = info.height;
+        }
+    }
+    cache->row_height[y] = max_height > 0 ? max_height : 1;
+}
+
+void viewport_cache_update_cell(viewport_cache_t *cache, const csv_contents *contents, size_t x, size_t y)
+{
+    if (!cache || !contents || x >= cache->columns || y >= cache->lines)
+    {
+        return;
+    }
+
+    viewport_cache_recompute_column(cache, contents, x);
+    viewport_cache_recompute_row(cache, contents, y);
+}
+
 void viewport_cache_dispose(viewport_cache_t *cache)
 {
     if (!cache)

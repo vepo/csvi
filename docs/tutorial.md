@@ -12,7 +12,7 @@ Install a prebuilt binary:
 curl https://vepo.github.io/assets/bin/get-csvi | sudo bash
 ```
 
-Or build from source (see [README.md](../README.md)). Then open any CSV file:
+Or build from source (see [docs/build.md](./build.md)). Then open any CSV file:
 
 ```bash
 csvi data.csv
@@ -30,8 +30,8 @@ Press `q` or `:q` to quit.
 
 When CSVI starts you see:
 
-- **Grid** — one screenful of cells. With color enabled (default `auto`), adjacent cells alternate light/dark backgrounds so columns and rows are easy to scan; the selected cell is highlighted in green. Without color, the selected cell uses reverse video.
-- **Status bar** — bottom line with current row/column, mode, and messages.
+- **Grid** — one screenful of cells. With color enabled (default `auto`), adjacent cells alternate light/dark backgrounds so columns and rows are easy to scan; the selected cell is highlighted in green; the cell being edited uses cyan. Without color, the selected and editing cells use reverse video.
+- **Status bar** — bottom line with current row/column, mode, and messages. A `*` after the filename means unsaved changes.
 
 Example status text in normal mode:
 
@@ -67,7 +67,10 @@ Row and column numbers are **1-based** (row 1 is the first line in the file).
 
 | Command | Action |
 |---------|--------|
-| `:q` or `:quit` | Exit |
+| `:q` or `:quit` | Exit (error if modified) |
+| `:w` or `:write` | Save file |
+| `:wq` | Save and exit |
+| `:q!` or `:quit!` | Exit without saving |
 | `:line N` or `:N` | Go to row N |
 | `:col N` | Go to column N |
 | `:cell ROW,COL` or `:ROW,COL` | Go to a specific cell (e.g. `:cell 42,3`) |
@@ -93,6 +96,19 @@ Jump to the header row, then scan columns:
 ```
 
 Use `:col 5` or arrow keys to move across.
+
+## Editing cells
+
+1. Move to a cell and press `i` or `Insert`.
+2. Type the new value in the **edit preview** line above the status bar (full terminal width, scrolls with `<` / `>`). Changed characters are underlined; `EDIT n/m*` shows cursor position and unsaved edits within the cell.
+3. Press `Enter` to commit (updates memory; status bar shows `filename*`).
+4. Press `Esc` to cancel without changing the cell.
+
+Navigation is blocked while editing — commit or cancel first.
+
+Write changes to disk with `:w`, or `:wq` to save and quit. `:q` and `q` refuse to exit while the file is modified; use `:q!` to discard changes.
+
+Files without write permission open read-only; editing is disabled.
 
 ## Search
 

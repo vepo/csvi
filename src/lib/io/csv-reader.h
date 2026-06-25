@@ -22,6 +22,7 @@ typedef struct csv_contents
 void csv_reader_set_separator(char separator);
 csv_contents *csv_reader_read_file(const char *path, char *errbuf, size_t errbuf_len);
 csv_token *csv_reader_get_token(size_t x, size_t y, const csv_contents *contents);
+int csv_reader_set_cell(csv_contents *contents, size_t x, size_t y, const char *value);
 void csv_contents_dispose(csv_contents *contents);
 void csv_token_dispose(csv_token *token);
 

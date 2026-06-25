@@ -6,6 +6,43 @@
 #include <string.h>
 #include <unistd.h>
 
+#define TEMP_DIR_SUFFIX "/csvi-test-XXXXXX"
+#define FIXTURE_FILENAME "fixture.csv"
+
+static char *create_temp_fixture_path(void)
+{
+    const char *tmpdir = getenv("TMPDIR");
+    if (!tmpdir || tmpdir[0] == '\0')
+    {
+        tmpdir = "/tmp";
+    }
+
+    size_t template_len = strlen(tmpdir) + strlen(TEMP_DIR_SUFFIX) + 1;
+    char *template = malloc(template_len);
+    if (!template)
+    {
+        ck_abort_msg("Could not allocate temp dir template");
+    }
+    snprintf(template, template_len, "%s%s", tmpdir, TEMP_DIR_SUFFIX);
+
+    if (!mkdtemp(template))
+    {
+        free(template);
+        ck_abort_msg("Could not create temp dir");
+    }
+
+    size_t path_len = strlen(template) + 1 + strlen(FIXTURE_FILENAME) + 1;
+    char *path = malloc(path_len);
+    if (!path)
+    {
+        free(template);
+        ck_abort_msg("Could not allocate temp file path");
+    }
+    snprintf(path, path_len, "%s/%s", template, FIXTURE_FILENAME);
+    free(template);
+    return path;
+}
+
 #define LINE_BREAK_CONTENTS "Description;value1;value 2;\"value;\";\"value 5\"\"\"\n\
 This is a csv file;\"Value with line\n\
 break\n\
@@ -41,19 +78,7 @@ void write_file(char *resource_name, char *contents)
 
 char *test_resource_get(char *resource_key)
 {
-    char template[] = "/tmp/csvi-test-XXXXXX";
-    int fd = mkstemp(template);
-    if (fd == -1)
-    {
-        ck_abort_msg("Could not create temp file");
-    }
-    close(fd);
-
-    char *resource_name = strdup(template);
-    if (!resource_name)
-    {
-        ck_abort_msg("Could not allocate temp file path");
-    }
+    char *resource_name = create_temp_fixture_path();
 
     if (strncmp(resource_key, "LINE_BREAK_CONTENTS", 19) == 0)
     {

@@ -17,7 +17,9 @@ typedef struct command_executors
     void (*search_prev)(void);
     void (*set_separator)(char);
     void (*set_header)(bool);
+    int (*save_file)(void);
     void (*exit)(int);
+    void (*exit_force)(int);
     void (*show_error)(char *error_message);
 } command_executors_t;
 

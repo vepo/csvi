@@ -14,6 +14,13 @@ typedef struct matrix_display_options
     bool header_enabled;
 } matrix_display_options_t;
 
+typedef enum cell_draw_state
+{
+    CELL_DRAW_NORMAL = 0,
+    CELL_DRAW_SELECTED = 1,
+    CELL_DRAW_EDITING = 2
+} cell_draw_state_t;
+
 void matrix_presentation_init(const matrix_display_options_t *options);
 void matrix_presentation_shutdown(void);
 void matrix_presentation_exit(void);
@@ -27,10 +34,14 @@ void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
                                    size_t abs_x,
                                    size_t abs_y,
                                    const char *data,
-                                   bool selected,
+                                   cell_draw_state_t state,
                                    bool search_match,
+                                   size_t edit_cursor_pos,
                                    const matrix_config_t *config,
                                    const matrix_properties_t *properties);
+
+void matrix_presentation_show_cell_cursor(int screen_y, int screen_x);
+void matrix_presentation_hide_cursor(void);
 
 void matrix_presentation_beep(void);
 void matrix_presentation_refresh_partial(void);
