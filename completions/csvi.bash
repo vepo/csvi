@@ -5,10 +5,14 @@ _csvgi_completions()
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="-s -V -v -h --separator --verbose --version --help"
+    opts="-s -C -G -H -V -v -h --separator --color --grid --header --verbose --version --help"
 
     case "${prev}" in
         -s|--separator)
+            return 0
+            ;;
+        --color)
+            COMPREPLY=( $(compgen -W "auto never always" -- "${cur}") )
             return 0
             ;;
         -*)

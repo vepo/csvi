@@ -1,0 +1,35 @@
+---
+description: Keep user tutorial, man pages, and command reference in sync
+globs: docs/tutorial.md,man/**,Commands.md,README.md,src/bin/**,src/lib/cmd/**,src/lib/ui/input-modes.c
+alwaysApply: false
+---
+
+# User docs sync
+
+When changing behavior users see (CLI flags, keys, `:` commands, search, status bar, exit codes), update **all** relevant user-facing docs in the same change:
+
+| Artifact | Role |
+|----------|------|
+| `docs/tutorial.md` | Getting-started guide: workflows, examples, tips |
+| `man/csvi.1` | Installed manual (`man csvi`): OPTIONS, KEYS, COMMANDS, EXIT STATUS |
+| `Commands.md` | Authoritative key/command reference and migration table |
+| `README.md` | Install, one-line usage, links to tutorial and Commands |
+
+Also update `docs/architecture.md` CLI/exit-code tables when flags or exit codes change (see `cli-surface-sync.mdc`).
+
+## What triggers an update
+
+| Change | Update |
+|--------|--------|
+| New/changed CLI flag | `main.c`, `man/csvi.1`, `docs/tutorial.md`, `Commands.md`, `README.md`, `docs/architecture.md` |
+| New/changed key binding | `Commands.md`, `man/csvi.1`, `docs/tutorial.md` |
+| New/changed `:` command | `Commands.md`, `man/csvi.1`, `docs/tutorial.md` |
+| Exit code change | `errors.h`, `man/csvi.1`, `docs/tutorial.md`, `docs/architecture.md` |
+| User-visible workflow (search, header, grid) | `docs/tutorial.md`; reference tables in `Commands.md` / `man/csvi.1` if surface changed |
+
+## Consistency
+
+- **1-based** row/column numbers everywhere in user docs.
+- Default separator is `;` unless code defaults change.
+- Keep `Commands.md` and `man/csvi.1` aligned; `docs/tutorial.md` may use prose and examples but must not contradict them.
+- Do not add CLI flags or commands without updating `man/csvi.1` and `docs/tutorial.md`.

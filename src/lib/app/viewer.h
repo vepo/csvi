@@ -1,13 +1,25 @@
 #ifndef CSVI_VIEWER_H_
 #define CSVI_VIEWER_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct csvi_viewer csvi_viewer_t;
 
+typedef enum csvi_color_mode
+{
+    CSVI_COLOR_AUTO = 0,
+    CSVI_COLOR_NEVER = 1,
+    CSVI_COLOR_ALWAYS = 2
+} csvi_color_mode_t;
+
 typedef struct csvi_viewer_options
 {
     char separator;
+    csvi_color_mode_t color_mode;
+    bool grid;
+    bool header;
+    const char *file_path;
 } csvi_viewer_options_t;
 
 csvi_viewer_t *csvi_viewer_create(const csvi_viewer_options_t *opts);

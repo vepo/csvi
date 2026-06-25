@@ -5,7 +5,7 @@
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=csv-viewer&metric=code_smells)](https://sonarcloud.io/dashboard?id=csv-viewer)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=csv-viewer&metric=coverage)](https://sonarcloud.io/dashboard?id=csv-viewer)
 
-CSV Viewer for the Linux command line.
+CSV Viewer for the Linux command line. Navigate by cell with arrow keys or `hjkl`; use `:` for commands and `/` for search. A status bar shows row, column, and mode.
 
 ## Install
 
@@ -32,9 +32,14 @@ sudo make install   # installs csvi and man/csvi.1
 csvi [options] file.csv
 csvi -V data.csv          # verbose logging to stderr
 csvi -s , data.csv        # comma-separated
+csvi --color=never --grid data.csv
+csvi --header data.csv    # freeze first row
 csvi -h                   # help
 ```
 
+**Breaking change:** legacy `:cN`, `:-1`, `Esc`-as-command, and `Home`/`End` as horizontal page keys are removed. See [Commands.md](./Commands.md) for the new key map and migration table.
+
+See [docs/tutorial.md](./docs/tutorial.md) for a getting-started guide.  
 See [Commands.md](./Commands.md) for key bindings and `:` commands.  
 See [docs/architecture.md](./docs/architecture.md) for module layout.
 

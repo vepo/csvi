@@ -27,12 +27,12 @@ Read **[docs/architecture.md](docs/architecture.md)** before changing module bou
 | Path | Role |
 |------|------|
 | `src/bin/main.c` | CLI parsing, exit codes |
-| `src/lib/app/` | Application state and event wiring |
+| `src/lib/app/` | Viewer state, paint strategy, search |
 | `src/lib/io/` | File I/O and CSV parsing |
-| `src/lib/layout/` | Cell sizing and shared types |
-| `src/lib/ui/` | ncurses presentation |
+| `src/lib/layout/` | Cell sizing, viewport cache, shared types |
+| `src/lib/ui/` | ncurses presentation, status bar, input modes |
 | `src/lib/nav/` | Cursor/viewport navigation |
-| `src/lib/cmd/` | `:` command parsing |
+| `src/lib/cmd/` | Cell-address `:` command parsing (`cell-commands.c`) |
 | `src/lib/common/` | Exit codes, logging, helpers |
 | `tests/` | Check-based unit tests |
 

@@ -7,12 +7,37 @@ csvi \- terminal CSV viewer
 .I FILE
 .SH DESCRIPTION
 .B csvi
-opens a CSV file in an interactive terminal viewer. Navigate with arrow keys,
-page keys, and Home/End. Press Esc to enter command mode.
+opens a CSV file in an interactive terminal viewer. Navigate by cell with
+arrow keys or
+.BR hjkl .
+The status bar shows the current row, column, and mode.
+.PP
+Default appearance is monochrome (reverse video for the selected cell).
+Use
+.B \-\-color=always
+for color when supported.
 .SH OPTIONS
 .TP
 .BR \-s ", " \-\-separator= \fICHAR\fR
 Cell separator character (default: ;).
+.TP
+.BR \-\-color= \fIMODE\fR
+Color mode:
+.BR auto ,
+.BR never ,
+or
+.BR always
+(default:
+.BR auto ).
+Respects
+.B NO_COLOR
+when set.
+.TP
+.B \-\-grid
+Draw vertical column separators.
+.TP
+.B \-\-header
+Freeze row 1 as a header while scrolling.
 .TP
 .BR \-V ", " \-\-verbose
 Write diagnostic messages to stderr.
@@ -22,28 +47,69 @@ Print usage and exit.
 .TP
 .BR \-v ", " \-\-version
 Print version and exit.
+.SH KEYS
+.TP
+.B Arrow keys / hjkl
+Move one cell.
+.TP
+.B Home / End
+First / last column in the current row.
+.TP
+.B Ctrl+F / Page Down
+Page down.
+.TP
+.B Ctrl+B / Page Up
+Page up.
+.TP
+.B g / G
+First / last row.
+.TP
+.B :
+Enter command mode.
+.TP
+.B /
+Search (substring match in all cells).
+.TP
+.B ?
+Help overlay.
+.TP
+.B n / N
+Next / previous search match.
+.TP
+.B q
+Quit.
 .SH COMMANDS
-Press Esc, then type:
+Press
+.B :
+then type a command (1-based row/column numbers):
 .TP
 .B :q
 Quit.
 .TP
-.BI : N
-Go to line \fIN\fR (1-based input, converted internally).
+.BI :line " N"
+Go to row \fIN\fR.
 .TP
-.BI :c N
+.BI :col " N"
 Go to column \fIN\fR.
 .TP
-.BI : Nx M
-Go to column \fIN\fR, line \fIM\fR.
+.BI :cell " ROW,COL"
+Go to row \fIROW\fR, column \fICOL\fR.
 .TP
-.B :0 / :-1
-First / last line.
+.B :top / :bottom
+First / last row.
 .TP
-.B :c0 / :c-1
+.B :left / :right
 First / last column.
+.TP
+.BI :set " sep=" CHAR
+Set separator (reload file to apply).
+.TP
+.BI :set " header=on|off"
+Toggle frozen header row.
 .PP
-See Commands.md in the source tree for the full list.
+See
+.BR Commands.md
+in the source tree for the full key map and migration notes for legacy commands.
 .SH EXIT STATUS
 .TP
 .B 0
@@ -61,4 +127,8 @@ I/O error (file not found or unreadable).
 .I FILE
 CSV file to display.
 .SH SEE ALSO
-.BR less (1)
+.BR less (1),
+.BR Commands.md
+(in the source tree),
+.BR docs/tutorial.md
+(getting-started guide)

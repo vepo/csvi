@@ -24,20 +24,31 @@ noinst_HEADERS = \
   io/csv-reader.h \
   layout/types.h \
   layout/matrix-config.h \
+  layout/viewport-cache.h \
   ui/actions.h \
+  ui/paint.h \
+  ui/input-modes.h \
+  ui/status-bar.h \
   ui/matrix-presentation.h \
   nav/navigation.h \
   cmd/commands.h \
-  app/viewer.h
+  cmd/cell-commands.h \
+  app/viewer.h \
+  app/search.h
 
 libcsvviewer_core_a_SOURCES = \
   common/log.c \
   io/buffer-reader.c \
   io/csv-reader.c \
   layout/matrix-config.c \
+  layout/viewport-cache.c \
   ui/matrix-presentation.c \
+  ui/input-modes.c \
+  ui/status-bar.c \
   nav/navigation.c \
-  cmd/commands.c
+  cmd/commands.c \
+  cmd/cell-commands.c \
+  app/search.c
 
 libcsvviewer_base_a_SOURCES = app/viewer.c
 libcsvviewer_base_a_LIBADD = libcsvviewer-core.a

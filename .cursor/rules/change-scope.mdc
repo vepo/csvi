@@ -19,8 +19,8 @@ alwaysApply: true
 
 ## User-facing sync
 
-- CLI flag or exit code change → `man/csvi.1` and `docs/architecture.md`.
-- Key binding or `:` command change → [Commands.md](Commands.md).
+- CLI flag or exit code change → `man/csvi.1`, [docs/tutorial.md](docs/tutorial.md), and `docs/architecture.md`.
+- Key binding or `:` command change → [Commands.md](Commands.md), `man/csvi.1`, and `docs/tutorial.md`.
 
 ## General
 

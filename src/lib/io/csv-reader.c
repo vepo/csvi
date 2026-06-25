@@ -191,6 +191,7 @@ csv_contents *csv_reader_read_file(const char *path, char *errbuf, size_t errbuf
 
     contents->columns = 0;
     contents->lines = 0;
+    contents->index = NULL;
     if (contents->first)
     {
         csv_token *token = contents->first;
@@ -204,12 +205,39 @@ csv_contents *csv_reader_read_file(const char *path, char *errbuf, size_t errbuf
         contents->lines++;
     }
 
+    if (contents->columns > 0 && contents->lines > 0)
+    {
+        size_t index_size = contents->columns * contents->lines;
+        contents->index = calloc(index_size, sizeof(csv_token *));
+        if (contents->index)
+        {
+            csv_token *curr = contents->first;
+            while (curr)
+            {
+                if (curr->y < contents->lines && curr->x < contents->columns)
+                {
+                    contents->index[curr->y * contents->columns + curr->x] = curr;
+                }
+                curr = curr->next;
+            }
+        }
+    }
+
     buffer_reader_release(reader);
     return contents;
 }
 
 csv_token *csv_reader_get_token(size_t x, size_t y, const csv_contents *contents)
 {
+    if (!contents || x >= contents->columns || y >= contents->lines)
+    {
+        return NULL;
+    }
+    if (contents->index)
+    {
+        return contents->index[y * contents->columns + x];
+    }
+
     csv_token *curr_token = contents->first;
     while (curr_token)
     {
@@ -226,6 +254,7 @@ void csv_contents_dispose(csv_contents *contents)
 {
     if (contents)
     {
+        free(contents->index);
         if (contents->first)
         {
             csv_token_dispose(contents->first);

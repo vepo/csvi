@@ -4,33 +4,36 @@
 #include <stdbool.h>
 
 #include "layout/matrix-config.h"
-#include "ui/actions.h"
+#include "layout/types.h"
+#include "ui/paint.h"
 
-enum COLORS_SCHEME
+typedef struct matrix_display_options
 {
-    SELECTED_CELL = 1,
-    EVEN_CELL = 2,
-    ODD_CELL = 3,
-    ERROR_MESSAGE = 4
-};
+    bool color_enabled;
+    bool grid_enabled;
+    bool header_enabled;
+} matrix_display_options_t;
 
-void matrix_presentation_init(void);
-void matrix_presentation_configure_handler(Action action, void (*callback)(void));
-void matrix_presentation_beep(void);
-void matrix_presentation_flash(void);
-void matrix_presentation_exit(void);
+void matrix_presentation_init(const matrix_display_options_t *options);
 void matrix_presentation_shutdown(void);
+void matrix_presentation_exit(void);
 void matrix_presentation_request_stop(void);
-void matrix_presentation_read_command(void (*callback)(char *));
-void matrix_presentation_refresh(matrix_properties_t *m_properties);
-void matrix_presentation_set_selected(coordinates_t *cell);
-void matrix_presentation_set_value(coordinates_t *position,
-                                   char *data,
-                                   bool selected,
-                                   matrix_config_t *config,
-                                   matrix_properties_t *m_properties);
+
 screen_size_t *matrix_presentation_get_screen_size(void);
-void matrix_presentation_handle(void);
-void matrix_presentation_error(char *error_message);
+screen_size_t *matrix_presentation_get_grid_size(const matrix_properties_t *properties);
+
+void matrix_presentation_clear_grid(const matrix_properties_t *properties);
+void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
+                                     const char *data,
+                                     bool selected,
+                                     bool search_match,
+                                     const matrix_config_t *config,
+                                     const matrix_properties_t *properties);
+
+void matrix_presentation_beep(void);
+void matrix_presentation_refresh_partial(void);
+
+typedef paint_action_t (*matrix_key_handler_t)(int key);
+void matrix_presentation_run(matrix_key_handler_t handler);
 
 #endif

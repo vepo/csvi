@@ -16,6 +16,7 @@ typedef struct csv_contents
     size_t columns;
     size_t lines;
     csv_token *first;
+    csv_token **index;
 } csv_contents;
 
 void csv_reader_set_separator(char separator);

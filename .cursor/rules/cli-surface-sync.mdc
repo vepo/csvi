@@ -13,6 +13,7 @@ When adding or changing flags, exit codes, or commands, update **all** of these 
 | `src/bin/main.c` | `getopt_long` options, `usage()`, validation |
 | `src/lib/common/errors.h` | New `CSVI_EXIT_*` constants |
 | `man/csvi.1` | OPTIONS, COMMANDS, EXIT STATUS |
+| `docs/tutorial.md` | CLI options, exit codes, user workflows |
 | `docs/architecture.md` | CLI surface and exit-code tables |
 | `Commands.md` | Key bindings and `:` commands (if changed) |
 

@@ -2,17 +2,7 @@
 #define CSVI_COMMANDS_H_
 
 #include <stddef.h>
-
-enum Commands
-{
-    NO_COMMAND = 1,
-    GO_TO_LINE = 2,
-    GO_TO_COLUMN = 3,
-    EXIT = 98,
-    UNKNOWN = 99
-};
-
-typedef enum Commands Command;
+#include <stdbool.h>
 
 typedef struct command_executors
 {
@@ -23,6 +13,10 @@ typedef struct command_executors
     void (*go_to_last_line)(void);
     void (*go_to_first_column)(void);
     void (*go_to_last_column)(void);
+    void (*search_next)(void);
+    void (*search_prev)(void);
+    void (*set_separator)(char);
+    void (*set_header)(bool);
     void (*exit)(int);
     void (*show_error)(char *error_message);
 } command_executors_t;
