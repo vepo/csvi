@@ -159,6 +159,35 @@ static void viewer_recompute_viewport(csvi_viewer_t *viewer)
     viewer->viewport_config = viewer_build_viewport_config(viewer);
 }
 
+static bool viewer_scroll_selection_into_view(csvi_viewer_t *viewer)
+{
+    bool changed = false;
+
+    for (int pass = 0; pass < 2; ++pass)
+    {
+        coordinates_t top_before = viewer->top_cell;
+
+        viewer_recompute_viewport(viewer);
+        nav_scroll_into_view(&viewer->top_cell,
+                             &viewer->selected_cell,
+                             (size_t)viewer->viewport_cells.width,
+                             (size_t)viewer->viewport_cells.height,
+                             viewer->file->columns,
+                             viewer->file->lines);
+
+        if (top_before.x != viewer->top_cell.x || top_before.y != viewer->top_cell.y)
+        {
+            changed = true;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return changed;
+}
+
 static void viewer_draw_cell_at(csvi_viewer_t *viewer, size_t abs_x, size_t abs_y, bool selected)
 {
     if (!viewer->viewport_config)
@@ -249,13 +278,10 @@ static paint_action_t viewer_navigate(csvi_viewer_t *viewer,
     }
     if (result == CURSOR_UPDATED)
     {
-        if (top_before->x != viewer->top_cell.x || top_before->y != viewer->top_cell.y)
-        {
-            viewer_update_cell_preview(viewer);
-            return PAINT_VIEWPORT;
-        }
+        bool viewport_moved = top_before->x != viewer->top_cell.x || top_before->y != viewer->top_cell.y;
+        viewport_moved = viewer_scroll_selection_into_view(viewer) || viewport_moved;
         viewer_update_cell_preview(viewer);
-        return PAINT_CURSOR;
+        return viewport_moved ? PAINT_VIEWPORT : PAINT_CURSOR;
     }
     return PAINT_NONE;
 }
@@ -275,25 +301,7 @@ static void viewer_jump_to(csvi_viewer_t *viewer, size_t x, size_t y)
         viewer->top_cell.y = 1;
     }
 
-    if (viewer->selected_cell.x < viewer->top_cell.x)
-    {
-        viewer->top_cell.x = viewer->selected_cell.x;
-    }
-    if (viewer->selected_cell.y < viewer->top_cell.y)
-    {
-        viewer->top_cell.y = viewer->selected_cell.y;
-    }
-
-    size_t vw = (size_t)viewer->viewport_cells.width;
-    size_t vh = (size_t)viewer->viewport_cells.height;
-    if (vw > 0 && viewer->selected_cell.x >= viewer->top_cell.x + vw)
-    {
-        viewer->top_cell.x = viewer->selected_cell.x - vw + 1;
-    }
-    if (vh > 0 && viewer->selected_cell.y >= viewer->top_cell.y + vh)
-    {
-        viewer->top_cell.y = viewer->selected_cell.y - vh + 1;
-    }
+    (void)viewer_scroll_selection_into_view(viewer);
 }
 
 static paint_action_t viewer_jump_paint(csvi_viewer_t *viewer)
@@ -474,7 +482,10 @@ static paint_action_t viewer_handle_normal(csvi_viewer_t *viewer, int key)
     {
     case 'h':
     case KEY_LEFT:
-        return viewer_navigate(viewer, navigate_left(&viewer->top_cell, &viewer->selected_cell), &top_before, &cursor_before);
+        return viewer_navigate(viewer,
+                               navigate_left(&viewer->top_cell, &viewer->selected_cell, &viewer->presented_matrix),
+                               &top_before,
+                               &cursor_before);
     case 'l':
     case KEY_RIGHT:
         return viewer_navigate(viewer,
@@ -486,7 +497,10 @@ static paint_action_t viewer_handle_normal(csvi_viewer_t *viewer, int key)
                                &cursor_before);
     case 'k':
     case KEY_UP:
-        return viewer_navigate(viewer, navigate_up(&viewer->top_cell, &viewer->selected_cell), &top_before, &cursor_before);
+        return viewer_navigate(viewer,
+                               navigate_up(&viewer->top_cell, &viewer->selected_cell, &viewer->presented_matrix),
+                               &top_before,
+                               &cursor_before);
     case 'j':
     case KEY_DOWN:
         return viewer_navigate(viewer,

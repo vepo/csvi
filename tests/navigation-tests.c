@@ -6,26 +6,28 @@
 
 START_TEST(test_navigation_up)
 {
-    // nothing
     coordinates_t top_cell = {
         .x = 0,
         .y = 0};
     coordinates_t cursor_position = {
         .x = 0,
         .y = 0};
+    screen_size_t screen_size = {
+        .width = 10,
+        .height = 10};
 
-    ck_assert_int_eq(BEEP, navigate_up(&top_cell, &cursor_position));
+    ck_assert_int_eq(BEEP, navigate_up(&top_cell, &cursor_position, &screen_size));
     ck_assert_int_eq(0, cursor_position.y);
     ck_assert_int_eq(0, top_cell.y);
 
     cursor_position.y = 1;
-    ck_assert_int_eq(CURSOR_UPDATED, navigate_up(&top_cell, &cursor_position));
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_up(&top_cell, &cursor_position, &screen_size));
     ck_assert_int_eq(0, cursor_position.y);
     ck_assert_int_eq(0, top_cell.y);
 
     cursor_position.y = 1;
     top_cell.y = 1;
-    ck_assert_int_eq(CURSOR_UPDATED, navigate_up(&top_cell, &cursor_position));
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_up(&top_cell, &cursor_position, &screen_size));
     ck_assert_int_eq(0, cursor_position.y);
     ck_assert_int_eq(0, top_cell.y);
 }
@@ -62,26 +64,28 @@ END_TEST
 
 START_TEST(test_navigation_left)
 {
-    // nothing
     coordinates_t top_cell = {
         .x = 0,
         .y = 0};
     coordinates_t cursor_position = {
         .x = 0,
         .y = 0};
+    screen_size_t screen_size = {
+        .width = 10,
+        .height = 10};
 
-    ck_assert_int_eq(BEEP, navigate_left(&top_cell, &cursor_position));
+    ck_assert_int_eq(BEEP, navigate_left(&top_cell, &cursor_position, &screen_size));
     ck_assert_int_eq(0, cursor_position.x);
     ck_assert_int_eq(0, top_cell.x);
 
     cursor_position.x = 1;
-    ck_assert_int_eq(CURSOR_UPDATED, navigate_left(&top_cell, &cursor_position));
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_left(&top_cell, &cursor_position, &screen_size));
     ck_assert_int_eq(0, cursor_position.x);
     ck_assert_int_eq(0, top_cell.x);
 
     cursor_position.x = 1;
     top_cell.x = 1;
-    ck_assert_int_eq(CURSOR_UPDATED, navigate_left(&top_cell, &cursor_position));
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_left(&top_cell, &cursor_position, &screen_size));
     ck_assert_int_eq(0, cursor_position.x);
     ck_assert_int_eq(0, top_cell.x);
 }
@@ -193,6 +197,21 @@ START_TEST(test_navigation_right_viewport_scroll)
 }
 END_TEST
 
+START_TEST(test_navigation_scroll_offscreen_column)
+{
+    coordinates_t top_cell = {.x = 14, .y = 0};
+    coordinates_t cursor_position = {.x = 18, .y = 0};
+    screen_size_t screen_size = {.width = 5, .height = 1};
+
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_right(&top_cell, &cursor_position, &screen_size, 101));
+    ck_assert_int_eq(19, cursor_position.x);
+    ck_assert_int_eq(15, top_cell.x);
+
+    nav_scroll_into_view(&top_cell, &cursor_position, 5, 1, 101, 1);
+    ck_assert_int_eq(15, top_cell.x);
+}
+END_TEST
+
 START_TEST(test_navigation_home)
 {
     coordinates_t top_cell = {.x = 0, .y = 0};
@@ -234,6 +253,7 @@ Suite *matrix_test_suite(void)
     tcase_add_test(tc_core, test_navigation_left);
     tcase_add_test(tc_core, test_navigation_right);
     tcase_add_test(tc_core, test_navigation_right_viewport_scroll);
+    tcase_add_test(tc_core, test_navigation_scroll_offscreen_column);
     tcase_add_test(tc_core, test_navigation_page_up);
     tcase_add_test(tc_core, test_navigation_page_down);
     tcase_add_test(tc_core, test_navigation_home);

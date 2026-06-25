@@ -16,26 +16,70 @@ static NavigationResult nav_result(coordinates_t *top_before,
     {
         return CURSOR_UPDATED;
     }
+    if (top_before->x != top_after->x || top_before->y != top_after->y)
+    {
+        return CURSOR_UPDATED;
+    }
     return NONE;
 }
 
-NavigationResult navigate_up(coordinates_t *top_cell, coordinates_t *cursor_position)
+void nav_scroll_into_view(coordinates_t *top_cell,
+                            const coordinates_t *cursor_position,
+                            size_t viewport_width,
+                            size_t viewport_height,
+                            size_t num_columns,
+                            size_t num_lines)
+{
+    size_t vw = viewport_width > 0 ? viewport_width : 1;
+    size_t vh = viewport_height > 0 ? viewport_height : 1;
+
+    if (cursor_position->x < top_cell->x)
+    {
+        top_cell->x = cursor_position->x;
+    }
+    if (cursor_position->y < top_cell->y)
+    {
+        top_cell->y = cursor_position->y;
+    }
+    if (cursor_position->x >= top_cell->x + vw)
+    {
+        top_cell->x = cursor_position->x >= vw ? cursor_position->x - vw + 1 : 0;
+    }
+    if (cursor_position->y >= top_cell->y + vh)
+    {
+        top_cell->y = cursor_position->y >= vh ? cursor_position->y - vh + 1 : 0;
+    }
+
+    if (num_columns > 0 && num_columns > vw && top_cell->x + vw > num_columns)
+    {
+        top_cell->x = num_columns - vw;
+    }
+    if (num_lines > 0 && num_lines > vh && top_cell->y + vh > num_lines)
+    {
+        top_cell->y = num_lines - vh;
+    }
+}
+
+NavigationResult navigate_up(coordinates_t *top_cell,
+                           coordinates_t *cursor_position,
+                           const screen_size_t *screen_size)
 {
     coordinates_t top_before = *top_cell;
     coordinates_t cursor_before = *cursor_position;
 
-    if (top_cell->y > 0 && cursor_position->y == top_cell->y)
+    if (cursor_position->y == 0)
     {
-        top_cell->y--;
+        return BEEP;
     }
 
-    if (cursor_position->y > 0)
-    {
-        cursor_position->y--;
-        return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
-    }
-
-    return BEEP;
+    cursor_position->y--;
+    nav_scroll_into_view(top_cell,
+                         cursor_position,
+                         screen_size ? (size_t)screen_size->width : 1,
+                         screen_size ? (size_t)screen_size->height : 1,
+                         0,
+                         0);
+    return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
 }
 
 NavigationResult navigate_down(coordinates_t *top_cell,
@@ -46,37 +90,41 @@ NavigationResult navigate_down(coordinates_t *top_cell,
     coordinates_t top_before = *top_cell;
     coordinates_t cursor_before = *cursor_position;
 
-    if (top_cell->y + screen_size->height < num_lines && top_cell->y + screen_size->height == cursor_position->y + 1)
+    if (cursor_position->y >= num_lines - 1)
     {
-        top_cell->y++;
+        return BEEP;
     }
 
-    if (cursor_position->y < num_lines - 1)
-    {
-        cursor_position->y++;
-        return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
-    }
-
-    return BEEP;
+    cursor_position->y++;
+    nav_scroll_into_view(top_cell,
+                         cursor_position,
+                         screen_size ? (size_t)screen_size->width : 1,
+                         screen_size ? (size_t)screen_size->height : 1,
+                         0,
+                         num_lines);
+    return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
 }
 
-NavigationResult navigate_left(coordinates_t *top_cell, coordinates_t *cursor_position)
+NavigationResult navigate_left(coordinates_t *top_cell,
+                             coordinates_t *cursor_position,
+                             const screen_size_t *screen_size)
 {
     coordinates_t top_before = *top_cell;
     coordinates_t cursor_before = *cursor_position;
 
-    if (top_cell->x > 0 && cursor_position->x == top_cell->x)
+    if (cursor_position->x == 0)
     {
-        top_cell->x--;
+        return BEEP;
     }
 
-    if (cursor_position->x > 0)
-    {
-        cursor_position->x--;
-        return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
-    }
-
-    return BEEP;
+    cursor_position->x--;
+    nav_scroll_into_view(top_cell,
+                         cursor_position,
+                         screen_size ? (size_t)screen_size->width : 1,
+                         screen_size ? (size_t)screen_size->height : 1,
+                         0,
+                         0);
+    return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
 }
 
 NavigationResult navigate_right(coordinates_t *top_cell,
@@ -87,18 +135,19 @@ NavigationResult navigate_right(coordinates_t *top_cell,
     coordinates_t top_before = *top_cell;
     coordinates_t cursor_before = *cursor_position;
 
-    if (top_cell->x + screen_size->width < num_columns && top_cell->x + screen_size->width == cursor_position->x + 1)
+    if (cursor_position->x >= num_columns - 1)
     {
-        top_cell->x++;
+        return BEEP;
     }
 
-    if (cursor_position->x < num_columns - 1)
-    {
-        cursor_position->x++;
-        return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
-    }
-
-    return BEEP;
+    cursor_position->x++;
+    nav_scroll_into_view(top_cell,
+                         cursor_position,
+                         screen_size ? (size_t)screen_size->width : 1,
+                         screen_size ? (size_t)screen_size->height : 1,
+                         num_columns,
+                         0);
+    return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
 }
 
 NavigationResult navigate_page_up(coordinates_t *top_cell,
@@ -191,15 +240,12 @@ NavigationResult navigate_row_end(coordinates_t *top_cell,
     if (cursor_position->x < num_columns - 1)
     {
         cursor_position->x = num_columns - 1;
-        if (top_cell->x > cursor_position->x)
-        {
-            top_cell->x = cursor_position->x;
-        }
-        else if (screen_size && screen_size->width > 0 &&
-                 top_cell->x + (size_t)screen_size->width <= cursor_position->x)
-        {
-            top_cell->x = cursor_position->x - (size_t)screen_size->width + 1;
-        }
+        nav_scroll_into_view(top_cell,
+                             cursor_position,
+                             screen_size ? (size_t)screen_size->width : 1,
+                             screen_size ? (size_t)screen_size->height : 1,
+                             num_columns,
+                             0);
         return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
     }
 
@@ -296,14 +342,12 @@ NavigationResult navigate_page_right(coordinates_t *top_cell,
         else
         {
             cursor_position->x = num_columns - 1;
-            if (page > 0 && top_cell->x + page <= cursor_position->x)
-            {
-                top_cell->x = cursor_position->x - page + 1;
-            }
-            else if (top_cell->x > cursor_position->x)
-            {
-                top_cell->x = cursor_position->x;
-            }
+            nav_scroll_into_view(top_cell,
+                                 cursor_position,
+                                 page,
+                                 screen_size ? (size_t)screen_size->height : 1,
+                                 num_columns,
+                                 0);
         }
         return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
     }
