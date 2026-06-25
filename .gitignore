@@ -1,54 +1,80 @@
-build
+# Editor / OS
 .vscode
-*.exe
+*~
 
+# Local out-of-tree build directories
+build/
+build_wrapper_output_directory/
+
+# Binaries and installers
+*.exe
+src/bin/csvi
 csv-viewer
 installer
-	
-## Automake
+
+# Packaging output (sources under packaging/ remain tracked)
+/packaging/staging/
+/packaging/dist/
+packaging/*.deb
+packaging/*.rpm
+packaging/*.apk
+
+# Autotools — generated at repository root
 /autom4te.cache/
-/config/
-Makefile
-Makefile.in
-aclocal.m4
-app.info
-compile
-config.h
-config.h.in
-config.log
-config.status
-configure
-configure.scan
-coverage_report
-depcomp
-install-sh
-libtool
-m4
-missing
-stamp-h1
-*~
-*.html
-*.log
+/aclocal.m4
+/compile
+/config.guess
+/config.h
+/config.h.in
+/config.h.in~
+/config.log
+/config.status
+/config.sub
+/configure
+/configure~
+/depcomp
+/install-sh
+/libtool
+/ltmain.sh
+/m4/
+/missing
+/stamp-h1
+/test-driver
+/Makefile
+/Makefile.in
+
+# Autotools — generated in subdirectories
+src/**/Makefile
+src/**/Makefile.in
+tests/Makefile
+tests/Makefile.in
+
+# Object files and link products
 *.o
+*.lo
 *.la
-*.so*
+*.so
+*.so.*
 *.a
 .deps
-*.tar*
-*.zip
-*.lo
+.dirstamp
+
+# Coverage
 *.gcno
 *.gcda
-**/*.gcov
-config.guess
-config.sub
-ltmain.sh
-test-driver
-tests/run_all_tests
-tests/run_all_tests.trs
-
-src/bin/csvi
-
-coverage-report
+*.gcov
+coverage-report/
 coverage.info
-coverage
+coverage/
+
+# Test and log output
+*.log
+*.trs
+test-suite.log
+tests/*_tests
+
+# Archives
+*.tar
+*.tar.gz
+*.tar.bz2
+*.zip
