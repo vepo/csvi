@@ -1,0 +1,53 @@
+# nfpm package spec — builds .deb, .rpm, and .apk from a staged install tree.
+# See packaging/build-packages.sh and docs/build.md.
+
+name: csvi
+arch: "${NFPM_ARCH}"
+platform: linux
+version: "${NFPM_VERSION}"
+version_schema: semver
+section: utils
+priority: optional
+maintainer: "vepo <https://github.com/vepo>"
+description: |
+  CSVI is a terminal CSV viewer for Linux.
+  Navigate by cell with arrow keys or hjkl; use colon commands and slash search.
+license: GPLv3
+homepage: https://github.com/vepo/csvi
+vendor: CSVI
+
+depends:
+  - libncurses6 (>= 6)
+  - libtinfo6 (>= 6)
+
+overrides:
+  rpm:
+    depends:
+      - ncurses-libs
+  apk:
+    depends:
+      - ncurses-libs
+
+deb:
+  compression: gzip
+
+rpm:
+  compression: gzip
+
+contents:
+  - src: ./packaging/staging/usr/bin/csvi
+    dst: /usr/bin/csvi
+    file_info:
+      mode: 0755
+  - src: ./packaging/staging/usr/share/man/man1/csvi.1
+    dst: /usr/share/man/man1/csvi.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/staging/usr/share/bash-completion/completions/csvi
+    dst: /usr/share/bash-completion/completions/csvi
+    file_info:
+      mode: 0644
+  - src: ./packaging/staging/usr/share/zsh/site-functions/_csvi
+    dst: /usr/share/zsh/site-functions/_csvi
+    file_info:
+      mode: 0644

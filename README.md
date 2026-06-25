@@ -9,6 +9,8 @@ CSV Viewer for the Linux command line. Navigate by cell with arrow keys or `hjkl
 
 ## Install
 
+Prebuilt packages are attached to [GitHub releases](https://github.com/vepo/csvi/releases) (`.deb`, `.rpm`, `.apk`) or install via the shell script:
+
 ```bash
 curl https://vepo.github.io/assets/bin/get-csvi | sudo bash
 ```

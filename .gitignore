@@ -4,6 +4,8 @@ build
 
 csv-viewer
 installer
+packaging/staging
+packaging/dist
 build_wrapper_output_directory
 
 ## Automake / Autoconf generated files

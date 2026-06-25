@@ -130,6 +130,51 @@ The self-extracting installer script used on the project website is built with:
 
 This runs `make dist`, embeds the tarball in `installer-template`, and writes `installer`.
 
+## Linux packages (.deb, .rpm, .apk)
+
+CI builds native packages with [nfpm](https://nfpm.goreleaser.com/) from a staged `make install`:
+
+| Format | Install command |
+|--------|-----------------|
+| Debian / Ubuntu (`.deb`) | `sudo apt install ./csvi_VERSION_amd64.deb` |
+| Fedora / RHEL (`.rpm`) | `sudo dnf install ./csvi-VERSION-1.x86_64.rpm` |
+| Alpine (`.apk`) | `sudo apk add --allow-untrusted ./csvi_VERSION_x86_64.apk` |
+
+Local build (requires [nfpm](https://nfpm.goreleaser.com/docs/install/) on `PATH`):
+
+```bash
+./packaging/build-packages.sh deb rpm apk
+```
+
+Packages are written to `packaging/dist/`. Each package installs:
+
+- `/usr/bin/csvi`
+- `/usr/share/man/man1/csvi.1`
+- bash and zsh shell completions
+
+### GitHub releases
+
+Push a version tag to publish all artifacts to a GitHub release:
+
+```bash
+git tag v0.0.1
+git push origin v0.0.1
+```
+
+The CI workflow uploads the source tarball, `.deb`, `.rpm`, `.apk`, and the shell `installer` script.
+
+## Continuous integration
+
+The [`.github/workflows/ccpp.yml`](../.github/workflows/ccpp.yml) pipeline runs:
+
+| Job | Purpose |
+|-----|---------|
+| **Test** | Matrix build on Ubuntu 22.04 and 24.04 (`make check`) |
+| **SonarCloud** | Coverage build and static analysis |
+| **Source distribution** | `make distcheck` validation |
+| **Linux packages** | `.deb`, `.rpm`, `.apk`, and shell installer |
+| **GitHub Release** | Publishes artifacts when a `v*` tag is pushed |
+
 ## Troubleshooting
 
 **`configure: not found`** — Run `./bootstrap` first.
@@ -153,5 +198,7 @@ This runs `make dist`, embeds the tarball in `installer-template`, and writes `i
 | `tests/Makefile.am` | Check-based unit tests |
 | `bootstrap` | Regenerates the Autotools build system |
 | `build-installer` | Packages `make dist` output into the web installer |
+| `packaging/nfpm.yaml` | nfpm spec for `.deb`, `.rpm`, and `.apk` |
+| `packaging/build-packages.sh` | Build native Linux packages locally or in CI |
 
 For module architecture and coding conventions, see [architecture.md](./architecture.md) and [AGENTS.md](../AGENTS.md).
