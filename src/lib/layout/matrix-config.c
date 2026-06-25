@@ -1,8 +1,8 @@
-#include "matrix-config.h"
+#include "layout/matrix-config.h"
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "helper.h"
 
 matrix_config_t *matrix_config_initialize(size_t width, size_t height)
 {

@@ -1,0 +1,64 @@
+.TH CSVI 1 "June 2025" "csvi" "User Commands"
+.SH NAME
+csvi \- terminal CSV viewer
+.SH SYNOPSIS
+.B csvi
+[\fIOPTIONS\fR]
+.I FILE
+.SH DESCRIPTION
+.B csvi
+opens a CSV file in an interactive terminal viewer. Navigate with arrow keys,
+page keys, and Home/End. Press Esc to enter command mode.
+.SH OPTIONS
+.TP
+.BR \-s ", " \-\-separator= \fICHAR\fR
+Cell separator character (default: ;).
+.TP
+.BR \-V ", " \-\-verbose
+Write diagnostic messages to stderr.
+.TP
+.BR \-h ", " \-\-help
+Print usage and exit.
+.TP
+.BR \-v ", " \-\-version
+Print version and exit.
+.SH COMMANDS
+Press Esc, then type:
+.TP
+.B :q
+Quit.
+.TP
+.BI : N
+Go to line \fIN\fR (1-based input, converted internally).
+.TP
+.BI :c N
+Go to column \fIN\fR.
+.TP
+.BI : Nx M
+Go to column \fIN\fR, line \fIM\fR.
+.TP
+.B :0 / :-1
+First / last line.
+.TP
+.B :c0 / :c-1
+First / last column.
+.PP
+See Commands.md in the source tree for the full list.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+General error.
+.TP
+.B 2
+Usage error.
+.TP
+.B 3
+I/O error (file not found or unreadable).
+.SH FILES
+.I FILE
+CSV file to display.
+.SH SEE ALSO
+.BR less (1)

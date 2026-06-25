@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "navigation.h"
+#include "nav/navigation.h"
 
 START_TEST(test_navigation_up)
 {

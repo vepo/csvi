@@ -1,0 +1,28 @@
+---
+description: C coding standards for CSVI
+globs: src/**/*.{c,h},tests/**/*.c
+alwaysApply: false
+---
+
+# CSVI C Standards
+
+- No `exit()` in library code under `src/lib/` — return error codes or NULL; only `main` and the app layer terminate the process.
+- Every `malloc`/`calloc` has a matching `free` on all paths.
+- Use `const` for read-only pointer parameters.
+- Prefer `size_t` for indices and lengths.
+- snake_case for functions, types, and struct fields (no camelCase).
+- Headers use include guards (`CSVI_*_H_`).
+- Includes: `-I src/lib`, paths like `#include "io/csv-reader.h"`.
+- New source files belong under the correct layer: `common/`, `io/`, `layout/`, `ui/`, `nav/`, `cmd/`, `app/`.
+- Non-UI logic changes require tests in `tests/`; run `make check`.
+
+```c
+// BAD — library calls exit
+if (!fp) { fprintf(stderr, "error\n"); exit(1); }
+
+// GOOD — propagate error
+if (!fp) {
+    snprintf(errbuf, errbuf_len, "could not open '%s'", path);
+    return NULL;
+}
+```

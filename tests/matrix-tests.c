@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "matrix-config.h"
+#include "layout/matrix-config.h"
 #include "mock-token.h"
 
 START_TEST(test_matrix_initialization)

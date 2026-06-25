@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "commands.h"
+#include "cmd/commands.h"
 
 int test_commands_counter_exit = 0;
 int test_commands_counter_go_to_column = 0;

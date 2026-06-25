@@ -1,7 +1,7 @@
-#ifndef NAVIGATION_H_
-#define NAVIGATION_H_
+#ifndef CSVI_NAVIGATION_H_
+#define CSVI_NAVIGATION_H_
 
-#include "matrix-config.h"
+#include "layout/types.h"
 
 enum NavigationResults
 {

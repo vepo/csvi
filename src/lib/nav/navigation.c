@@ -1,4 +1,4 @@
-#include "navigation.h"
+#include "nav/navigation.h"
 
 NavigationResult navigate_up(coordinates_t *top_cell,
                              coordinates_t *cursor_position)

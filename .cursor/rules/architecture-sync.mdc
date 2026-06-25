@@ -1,0 +1,17 @@
+---
+description: Keep docs/architecture.md in sync with structural changes
+alwaysApply: true
+---
+
+# Architecture sync
+
+Before editing module boundaries or adding files under `src/lib/`:
+
+1. Read [docs/architecture.md](docs/architecture.md).
+
+After structural changes (new/moved modules, data flow, CLI flags, exit codes, lifecycle):
+
+1. Update [docs/architecture.md](docs/architecture.md) — module table, diagram, ownership, CLI surface.
+2. Update [AGENTS.md](AGENTS.md) if build commands or layout changed.
+
+Do not merge structural refactors without updating the architecture doc in the same change.

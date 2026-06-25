@@ -1,30 +1,43 @@
+AUTOMAKE_OPTIONS = subdir-objects
+
 if COVERAGE
   COVERAGE_CFLAG = -ftest-coverage -fprofile-arcs
 else
   COVERAGE_CFLAG =
 endif
 
+AM_CPPFLAGS = -I$(top_srcdir)/src/lib
+
 if DEBUG
-  AM_CFLAGS =-I$(top_srcdir)/src/lib -Wall -g -O3 $(COVERAGE_CFLAG)
+  AM_CFLAGS = -Wall -g -O3 $(COVERAGE_CFLAG)
 else
-  AM_CFLAGS =-I$(top_srcdir)/src/lib -Wall $(COVERAGE_CFLAG)
+  AM_CFLAGS = -Wall $(COVERAGE_CFLAG)
 endif
 
-noinst_LIBRARIES = libcsvviewer-base.a
-noinst_HEADERS = actions.h \
-                 helper.h \
-                 csv-reader.h \
-                 buffer-reader.h \
-                 matrix-config.h \
-                 matrix-presentation.h \
-                 navigation.h \
-                 commands.h
+noinst_LIBRARIES = libcsvviewer-core.a libcsvviewer-base.a
 
-libcsvviewer_base_a_SOURCES = \
-                              $(libcsvviewer_base_a_HEADERS) \
-                              csv-reader.c \
-                              buffer-reader.c \
-                              matrix-config.c \
-                              matrix-presentation.c \
-                              navigation.c \
-                              commands.c
+noinst_HEADERS = \
+  common/errors.h \
+  common/helper.h \
+  common/log.h \
+  io/buffer-reader.h \
+  io/csv-reader.h \
+  layout/types.h \
+  layout/matrix-config.h \
+  ui/actions.h \
+  ui/matrix-presentation.h \
+  nav/navigation.h \
+  cmd/commands.h \
+  app/viewer.h
+
+libcsvviewer_core_a_SOURCES = \
+  common/log.c \
+  io/buffer-reader.c \
+  io/csv-reader.c \
+  layout/matrix-config.c \
+  ui/matrix-presentation.c \
+  nav/navigation.c \
+  cmd/commands.c
+
+libcsvviewer_base_a_SOURCES = app/viewer.c
+libcsvviewer_base_a_LIBADD = libcsvviewer-core.a

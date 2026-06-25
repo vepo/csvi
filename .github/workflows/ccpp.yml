@@ -1,79 +1,74 @@
 name: C/C++ CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Install dependencies 
+    - uses: actions/checkout@v4
+    - name: Install dependencies
       run: sudo apt-get update && sudo apt install -y libncurses5-dev libncursesw5-dev pkg-config check unzip
-    - name: reconf
-      run: autoreconf -iv
-    - name: Configure with Coverage
+    - name: autoreconf
+      run: autoreconf -ivf
+    - name: Configure with coverage
       run: ./configure --enable-coverage
     - name: Configure Sonar
       run: |
-        wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
-        unzip build-wrapper-linux-x86.zip
-        wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip
-        unzip sonar-scanner-cli-4.4.0.2170-linux.zip
-    - name: Run Tests
+        wget -q https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+        unzip -q build-wrapper-linux-x86.zip
+        wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip
+        unzip -q sonar-scanner-cli-4.4.0.2170-linux.zip
+    - name: Run tests with build wrapper
       run: |
         ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output make clean
         ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output make check
         for source_file in $(find src -name '*.c')
         do
-            echo $source_file
-            cd $(dirname $source_file)
-            gcov $(basename $source_file)
+            cd $(dirname "$source_file")
+            gcov $(basename "$source_file") || true
             cd -
         done
     - name: Run Sonar
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       run: |
-        VERSION=`./configure --version | head -n 1 | awk '{print $3}'`
-        ./sonar-scanner-4.4.0.2170-linux/bin/sonar-scanner -Dsonar.organization=vepo-github \
-                                                           -Dsonar.projectKey=csv-viewer \
-                                                           -Dsonar.sources=src \
-                                                           -Dsonar.host.url=https://sonarcloud.io \
-                                                           -Dsonar.cfamily.build-wrapper-output=bw-output \
-                                                           -Dsonar.branch.name=${BASE_BRANCH} \
-                                                           -Dsonar.login=${SONAR_TOKEN} \
-                                                           -Dsonar.cfamily.gcov.reportsPath=src \
-                                                           -Dsonar.projectVersion=$VERSION \
-                                                           -Dsonar.exclusions=tests/**/*
+        VERSION=$(./configure --version | head -n 1 | awk '{print $3}')
+        ./sonar-scanner-4.4.0.2170-linux/bin/sonar-scanner \
+          -Dsonar.organization=vepo-github \
+          -Dsonar.projectKey=csv-viewer \
+          -Dsonar.sources=src \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.cfamily.build-wrapper-output=bw-output \
+          -Dsonar.login=${SONAR_TOKEN} \
+          -Dsonar.cfamily.gcov.reportsPath=src \
+          -Dsonar.projectVersion=$VERSION \
+          -Dsonar.exclusions=tests/**/*
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        BASE_BRANCH: ${{ github.base_ref }}
-    - name: Configure
+    - name: Configure release build
       run: ./configure
-    - name: Clean & Make
+    - name: Build and test
       run: |
         make clean
         make
-    - name: make check
-      run: make check
+        make check
     - name: make dist
       run: make dist
-    - name: Rename artifact
-      run: cp csv-viewer-*.tar.gz csv-viewer-dist.tar.gz
-    - uses: actions/upload-artifact@v1
+    - name: Upload dist artifact
+      uses: actions/upload-artifact@v4
       with:
         name: csv-viewer
-        path: csv-viewer-dist.tar.gz
+        path: csv-viewer-*.tar.gz
+
   create-installer:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies 
+      - uses: actions/checkout@v4
+      - name: Install dependencies
         run: sudo apt-get update && sudo apt install -y libncurses5-dev libncursesw5-dev pkg-config check unzip
       - run: bash build-installer
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: get-csvi
           path: installer
-
-

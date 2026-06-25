@@ -1,33 +1,10 @@
-#ifndef MATRIX_CONFIG_H_
-#define MATRIX_CONFIG_H_
+#ifndef CSVI_MATRIX_CONFIG_H_
+#define CSVI_MATRIX_CONFIG_H_
 
-#include <stdbool.h>
 #include <stddef.h>
-#include "csv-reader.h"
 
-typedef struct matrix_properties
-{
-    size_t cell_padding_top;
-    size_t cell_padding_right;
-    size_t cell_padding_bottom;
-    size_t cell_padding_left;
-    size_t margin_top;
-    size_t margin_right;
-    size_t margin_bottom;
-    size_t margin_left;
-} matrix_properties_t;
-
-typedef struct coordinates
-{
-    size_t x;
-    size_t y;
-} coordinates_t;
-
-typedef struct cell_info
-{
-    size_t width;
-    size_t height;
-} cell_info_t;
+#include "io/csv-reader.h"
+#include "layout/types.h"
 
 typedef struct matrix_config
 {
@@ -36,12 +13,6 @@ typedef struct matrix_config
     size_t heights;
     size_t columns;
 } matrix_config_t;
-
-typedef struct screen_size
-{
-    int width;
-    int height;
-} screen_size_t;
 
 void matrix_config_get_most_expanded(const screen_size_t *available,
                                      const matrix_properties_t *properties,

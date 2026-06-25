@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "csv-reader.h"
+#include "io/csv-reader.h"
 #include "mock-token.h"
 #include "test-resources.h"
 
@@ -39,7 +39,7 @@ void print_csv_token(csv_token *token)
 
 START_TEST(test_csv_reader_simple_csv)
 {
-    csv_contents *open_file = csv_reader_read_file(test_resource_get("SIMPLE_CONTENTS"));
+    csv_contents *open_file = csv_reader_read_file(test_resource_get("SIMPLE_CONTENTS"), NULL, 0);
 
     // print_csv_token(open_file->first);
 
@@ -67,7 +67,7 @@ END_TEST
 
 START_TEST(test_csv_reader_complex_csv)
 {
-    csv_contents *open_file = csv_reader_read_file(test_resource_get("COMPLEX_CONTENTS"));
+    csv_contents *open_file = csv_reader_read_file(test_resource_get("COMPLEX_CONTENTS"), NULL, 0);
 
     // print_csv_token(open_file->first);
 
@@ -95,7 +95,7 @@ END_TEST
 
 START_TEST(test_csv_line_break_csv)
 {
-    csv_contents *open_file = csv_reader_read_file(test_resource_get("LINE_BREAK_CONTENTS"));
+    csv_contents *open_file = csv_reader_read_file(test_resource_get("LINE_BREAK_CONTENTS"), NULL, 0);
 
     // print_csv_token(open_file->first);
 
@@ -126,7 +126,7 @@ END_TEST
 
 START_TEST(test_csv_line_end_csv)
 {
-    csv_contents *open_file = csv_reader_read_file(test_resource_get("LINE_END_CONTENTS"));
+    csv_contents *open_file = csv_reader_read_file(test_resource_get("LINE_END_CONTENTS"), NULL, 0);
 
     // print_csv_token(open_file->first);
 

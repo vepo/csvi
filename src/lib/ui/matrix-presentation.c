@@ -1,22 +1,25 @@
-#include "matrix-presentation.h"
+#include "ui/matrix-presentation.h"
 
+#include <curses.h>
 #include <stdlib.h>
 #include <string.h>
-#include <curses.h>
-#include "helper.h"
 
-screen_size_t configuration = {.width = 0, .height = 0};
+#include "common/helper.h"
+#include "common/log.h"
+
+static screen_size_t configuration = {.width = 0, .height = 0};
 
 typedef struct actions_config
 {
     Action action;
     void *callback;
     struct actions_config *next;
-} actions_config;
+} actions_config_t;
 
-actions_config *INITIAL_ACTION = NULL;
+static actions_config_t *initial_action = NULL;
+static bool running = true;
 
-void rectangle(int y1, int x1, int y2, int x2)
+static void rectangle(int y1, int x1, int y2, int x2)
 {
     mvhline(y1, x1, 0, x2 - x1);
     mvhline(y2, x1, 0, x2 - x1);
@@ -28,8 +31,9 @@ void rectangle(int y1, int x1, int y2, int x2)
     mvaddch(y2, x2, ACS_LRCORNER);
 }
 
-void matrix_presentation_init()
+void matrix_presentation_init(void)
 {
+    running = true;
     initscr();
     start_color();
 
@@ -46,7 +50,7 @@ void matrix_presentation_init()
     nodelay(stdscr, true);
 }
 
-screen_size_t *matrix_presentation_get_screen_size()
+screen_size_t *matrix_presentation_get_screen_size(void)
 {
     screen_size_t curr_config;
     getmaxyx(stdscr, curr_config.height, curr_config.width);
@@ -54,15 +58,15 @@ screen_size_t *matrix_presentation_get_screen_size()
     {
         configuration.width = curr_config.width;
         configuration.height = curr_config.height;
-        LOGGER_INFO("Screen size changed: (%d,%d)\n", curr_config.width, curr_config.height);
+        csvi_log_info("screen size changed: (%d,%d)\n", curr_config.width, curr_config.height);
     }
 
     return &configuration;
 }
 
-void *matrix_presentation_get_handler(Action action)
+static void *matrix_presentation_get_handler(Action action)
 {
-    actions_config *ac = INITIAL_ACTION;
+    actions_config_t *ac = initial_action;
     while (ac)
     {
         if (ac->action == action)
@@ -74,25 +78,25 @@ void *matrix_presentation_get_handler(Action action)
     return NULL;
 }
 
-void matrix_presentation_beep()
+void matrix_presentation_beep(void)
 {
     beep();
 }
 
-void matrix_presentation_flash()
+void matrix_presentation_flash(void)
 {
     flash();
 }
 
-void matrix_presentation_configure_handler(Action action, void (*callback)())
+void matrix_presentation_configure_handler(Action action, void (*callback)(void))
 {
-    actions_config *aconfig = (actions_config *)malloc(sizeof(actions_config));
+    actions_config_t *aconfig = (actions_config_t *)malloc(sizeof(actions_config_t));
     aconfig->action = action;
     aconfig->callback = callback;
     aconfig->next = NULL;
-    if (INITIAL_ACTION)
+    if (initial_action)
     {
-        actions_config *last_action = INITIAL_ACTION;
+        actions_config_t *last_action = initial_action;
         while (last_action->next)
         {
             last_action = last_action->next;
@@ -101,13 +105,30 @@ void matrix_presentation_configure_handler(Action action, void (*callback)())
     }
     else
     {
-        INITIAL_ACTION = aconfig;
+        initial_action = aconfig;
     }
 }
 
-void mp_repeaint()
+void matrix_presentation_shutdown(void)
 {
-    void (*handler)() = matrix_presentation_get_handler(PAINT);
+    actions_config_t *ac = initial_action;
+    while (ac)
+    {
+        actions_config_t *next = ac->next;
+        free(ac);
+        ac = next;
+    }
+    initial_action = NULL;
+}
+
+void matrix_presentation_request_stop(void)
+{
+    running = false;
+}
+
+static void mp_repaint(void)
+{
+    void (*handler)(void) = matrix_presentation_get_handler(PAINT);
     if (handler)
     {
         handler();
@@ -121,71 +142,63 @@ void matrix_presentation_refresh(matrix_properties_t *m_properties)
     rectangle(0, 0, configuration.height - m_properties->margin_bottom, configuration.width - m_properties->margin_right);
 }
 
-void matrix_presentation_handle()
+void matrix_presentation_handle(void)
 {
-    mp_repeaint();
-    while (true)
+    mp_repaint();
+    while (running)
     {
-        void (*handler)() = NULL;
-        int keyPressed = getch();
-        switch (keyPressed)
+        void (*handler)(void) = NULL;
+        int key_pressed = getch();
+        switch (key_pressed)
         {
-        case 27: // ESC
+        case 27:
             handler = matrix_presentation_get_handler(COMMAND);
-            LOGGER_INFO("Detected: KEY ESC\n");
+            csvi_log_info("detected: KEY ESC\n");
             break;
         case KEY_DOWN:
-            // code for arrow down
             handler = matrix_presentation_get_handler(DOWN);
-            LOGGER_INFO("Detected: KEY DOWN\n");
+            csvi_log_info("detected: KEY DOWN\n");
             break;
         case KEY_UP:
-            // code for arrow up
             handler = matrix_presentation_get_handler(UP);
-            LOGGER_INFO("Detected: KEY UP\n");
+            csvi_log_info("detected: KEY UP\n");
             break;
         case KEY_LEFT:
-            // code for arrow left
             handler = matrix_presentation_get_handler(LEFT);
-            LOGGER_INFO("Detected: KEY LEFT\n");
+            csvi_log_info("detected: KEY LEFT\n");
             break;
         case KEY_RIGHT:
-            // code for arrow right
             handler = matrix_presentation_get_handler(RIGHT);
-            LOGGER_INFO("Detected: KEY RIGHT\n");
+            csvi_log_info("detected: KEY RIGHT\n");
             break;
         case KEY_HOME:
-            // code for arrow right
             handler = matrix_presentation_get_handler(HOME);
-            LOGGER_INFO("Detected: KEY HOME\n");
+            csvi_log_info("detected: KEY HOME\n");
             break;
         case KEY_END:
-            // code for arrow right
             handler = matrix_presentation_get_handler(END);
-            LOGGER_INFO("Detected: KEY END\n");
+            csvi_log_info("detected: KEY END\n");
             break;
         case KEY_NPAGE:
-            // code for arrow left
             handler = matrix_presentation_get_handler(PAGE_DOWN);
-            LOGGER_INFO("Detected: KEY PAGE_DOWN\n");
+            csvi_log_info("detected: KEY PAGE_DOWN\n");
             break;
         case KEY_PPAGE:
-            // code for arrow left
             handler = matrix_presentation_get_handler(PAGE_UP);
-            LOGGER_INFO("Detected: KEY PAGE_UP\n");
+            csvi_log_info("detected: KEY PAGE_UP\n");
             break;
         default:
-            if (keyPressed > 0)
+            if (key_pressed > 0)
             {
-                LOGGER_INFO("Detected: %d\n", keyPressed);
+                csvi_log_info("detected key: %d\n", key_pressed);
             }
             break;
         }
 
         if (handler)
         {
-            (*handler)();
-            mp_repeaint();
+            handler();
+            mp_repaint();
         }
     }
 }
@@ -194,17 +207,17 @@ void matrix_presentation_read_command(void (*callback)(char *))
 {
     char *command_buffer = malloc(256 * sizeof(char));
     command_buffer[0] = '\0';
-    bool readingCommand = true;
+    bool reading_command = true;
     do
     {
         size_t len;
-        int keyPressed = getch();
-        switch (keyPressed)
+        int key_pressed = getch();
+        switch (key_pressed)
         {
-        case 10: // ASCII enter
+        case 10:
         case KEY_ENTER:
-            readingCommand = false;
-            LOGGER_INFO("Exiting...\n");
+            reading_command = false;
+            csvi_log_info("command input finished\n");
             break;
         case KEY_DOWN:
         case KEY_UP:
@@ -214,7 +227,7 @@ void matrix_presentation_read_command(void (*callback)(char *))
             break;
         case KEY_BACKSPACE:
             len = strlen(command_buffer);
-            LOGGER_INFO("Backspace: len=%d\n", len);
+            csvi_log_info("backspace: len=%zu\n", len);
             if (len > 0)
             {
                 command_buffer[len - 1] = '\0';
@@ -224,17 +237,19 @@ void matrix_presentation_read_command(void (*callback)(char *))
                 matrix_presentation_beep();
             }
 
-            WINDOW *cmd_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
-            wclear(cmd_scr);
-            mvwprintw(cmd_scr, 0, 0, command_buffer);
-            delwin(cmd_scr);
+            {
+                WINDOW *cmd_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
+                wclear(cmd_scr);
+                mvwprintw(cmd_scr, 0, 0, command_buffer);
+                delwin(cmd_scr);
+            }
             break;
         default:
-            if (keyPressed > 0)
+            if (key_pressed > 0)
             {
-                LOGGER_INFO("Key pressed: %d\n", keyPressed);
+                csvi_log_info("key pressed: %d\n", key_pressed);
                 len = strlen(command_buffer);
-                command_buffer[len] = keyPressed;
+                command_buffer[len] = key_pressed;
                 command_buffer[len + 1] = '\0';
 
                 WINDOW *cmd_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
@@ -244,22 +259,22 @@ void matrix_presentation_read_command(void (*callback)(char *))
             }
             break;
         }
-    } while (readingCommand);
+    } while (reading_command);
 
-    // clear
-    WINDOW *cmd_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
-    wclear(cmd_scr);
-    delwin(cmd_scr);
-    LOGGER_INFO("Finished!\n");
+    {
+        WINDOW *cmd_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
+        wclear(cmd_scr);
+        delwin(cmd_scr);
+    }
 
-    (*callback)(command_buffer);
+    callback(command_buffer);
     free(command_buffer);
 }
 
-void calculate_offsets(coordinates_t *cell,
-                       matrix_config_t *config,
-                       matrix_properties_t *m_properties,
-                       coordinates_t *position)
+static void calculate_offsets(coordinates_t *cell,
+                              matrix_config_t *config,
+                              matrix_properties_t *m_properties,
+                              coordinates_t *position)
 {
     size_t curr_x = 0;
     position->x = m_properties->margin_left;
@@ -286,11 +301,9 @@ void matrix_presentation_set_value(coordinates_t *cell,
                                    matrix_config_t *config,
                                    matrix_properties_t *m_properties)
 {
-    CHECK_FATAL_FN(!config, "Matrix not configured!\n", matrix_presentation_exit);
+    CHECK_FATAL_FN(!config, "matrix not configured\n", matrix_presentation_exit);
     coordinates_t position;
     calculate_offsets(cell, config, m_properties, &position);
-
-    //LOGGER_INFO("Wrinting (%ld, %ld) in (%ld, %ld) with (%ld, %ld)\n", cell->x, cell->y, position.x, position.y, config->column_width[cell->x], config->line_height[cell->y]);
 
     WINDOW *cell_scr = subwin(stdscr,
                               m_properties->cell_padding_top + config->line_height[cell->y] + m_properties->cell_padding_bottom,
@@ -304,7 +317,6 @@ void matrix_presentation_set_value(coordinates_t *cell,
     }
     else if (cell->x % 2 == 0)
     {
-
         if (cell->y % 2 == 0)
         {
             wbkgd(cell_scr, COLOR_PAIR(ODD_CELL));
@@ -355,7 +367,7 @@ void matrix_presentation_set_value(coordinates_t *cell,
 
 void matrix_presentation_error(char *error_message)
 {
-    LOGGER_INFO("ERROR: %s\n", error_message);
+    csvi_log_info("error message: %s\n", error_message);
     WINDOW *msg_scr = subwin(stdscr, 1, configuration.width - 11, configuration.height - 1, 1);
     wbkgd(msg_scr, COLOR_PAIR(ERROR_MESSAGE));
     wclear(msg_scr);
@@ -372,7 +384,7 @@ void matrix_presentation_set_selected(coordinates_t *cell)
     delwin(pos_scr);
 }
 
-void matrix_presentation_exit()
+void matrix_presentation_exit(void)
 {
     endwin();
 }

@@ -1,19 +1,18 @@
-#include "csv-reader.h"
-#include "buffer-reader.h"
+#include "io/csv-reader.h"
+#include "io/buffer-reader.h"
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <string.h>
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-/****************************
- * Internal Functions
- ****************************/
+static char csv_reader_separator = ';';
 
-void commit_while_isspace(buffer_reader *reader)
+static void commit_while_isspace(buffer_reader_t *reader)
 {
     while (buffer_reader_available(reader) > 0 && isspace(buffer_reader_current_char(reader, 0)))
     {
@@ -21,7 +20,7 @@ void commit_while_isspace(buffer_reader *reader)
     }
 }
 
-int count_spaces_previous(buffer_reader *reader, size_t start_pos)
+static int count_spaces_previous(buffer_reader_t *reader, size_t start_pos)
 {
     int spaces = 0;
     while (isspace(buffer_reader_current_char(reader, start_pos - spaces - 1)))
@@ -31,7 +30,7 @@ int count_spaces_previous(buffer_reader *reader, size_t start_pos)
     return spaces;
 }
 
-void proceed_token(csv_contents *contents, csv_token *current_token, csv_token *last_token)
+static void proceed_token(csv_contents *contents, csv_token *current_token, csv_token *last_token)
 {
     if (last_token)
     {
@@ -43,7 +42,7 @@ void proceed_token(csv_contents *contents, csv_token *current_token, csv_token *
     }
 }
 
-size_t process_end_of_token(buffer_reader *reader, size_t current_pos, size_t curr_column, csv_contents *contents)
+static size_t process_end_of_token(buffer_reader_t *reader, size_t current_pos, size_t curr_column, csv_contents *contents)
 {
     size_t column = curr_column;
     if (buffer_reader_current_char(reader, current_pos) == '\n')
@@ -61,7 +60,7 @@ size_t process_end_of_token(buffer_reader *reader, size_t current_pos, size_t cu
     return column;
 }
 
-size_t proceed_escaped_token(buffer_reader *reader, size_t *token_end)
+static size_t proceed_escaped_token(buffer_reader_t *reader, size_t *token_end)
 {
     size_t escaped_counter = 0;
     while ((buffer_reader_available(reader) > *token_end + 1))
@@ -82,15 +81,14 @@ size_t proceed_escaped_token(buffer_reader *reader, size_t *token_end)
             ++*token_end;
         }
     }
-    return *token_end - escaped_counter - 2; // remove quotes
+    return *token_end - escaped_counter - 2;
 }
 
-char *read_escaped_token(buffer_reader *reader, size_t token_end, size_t token_size)
+static char *read_escaped_token(buffer_reader_t *reader, size_t token_end, size_t token_size)
 {
     char *token = (char *)malloc(sizeof(char) * token_size + 1);
-    // the buffer[0] is the double quote ("), this is why always add 1
     size_t escaped_chars = 0;
-    for (int buffer_pos = 0; buffer_pos < token_size; buffer_pos++)
+    for (int buffer_pos = 0; buffer_pos < (int)token_size; buffer_pos++)
     {
         if (buffer_reader_current_char(reader, buffer_pos + 1 + escaped_chars) == '"' && buffer_reader_current_char(reader, buffer_pos + 2 + escaped_chars) == '"')
         {
@@ -102,24 +100,33 @@ char *read_escaped_token(buffer_reader *reader, size_t token_end, size_t token_s
     return token;
 }
 
-/****************************
- * External Functions
- ****************************/
-char csv_reader_separator = ';';
-
 void csv_reader_set_separator(char separator)
 {
     csv_reader_separator = separator;
 }
 
-csv_contents *csv_reader_read_file(char *path)
+csv_contents *csv_reader_read_file(const char *path, char *errbuf, size_t errbuf_len)
 {
     csv_contents *contents = (csv_contents *)malloc(sizeof(csv_contents));
+    if (!contents)
+    {
+        if (errbuf && errbuf_len > 0)
+        {
+            snprintf(errbuf, errbuf_len, "out of memory");
+        }
+        return NULL;
+    }
+
     contents->lines = 0;
     contents->columns = 0;
     contents->first = NULL;
     csv_token *last_token = NULL;
-    buffer_reader *reader = buffer_reader_open(path);
+    buffer_reader_t *reader = buffer_reader_open(path, errbuf, errbuf_len);
+    if (!reader)
+    {
+        free(contents);
+        return NULL;
+    }
 
     size_t column = 0;
 
@@ -148,11 +155,11 @@ csv_contents *csv_reader_read_file(char *path)
                     while (buffer_reader_available(reader) > token_end && isspace(buffer_reader_current_char(reader, token_end)) && buffer_reader_current_char(reader, token_end) != '\n')
                     {
                         ++token_end;
-                    };
+                    }
                     while (buffer_reader_available(reader) > token_end && buffer_reader_current_char(reader, token_end) != csv_reader_separator && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
                     {
                         ++token_end;
-                    };
+                    }
                     column = process_end_of_token(reader, token_end, column, contents);
                     proceed_token(contents, current_token, last_token);
                     last_token = current_token;
@@ -160,10 +167,10 @@ csv_contents *csv_reader_read_file(char *path)
                 else
                 {
                     size_t token_end = 0;
-                    while ((buffer_reader_available(reader) > token_end || !reader->endReached) && buffer_reader_current_char(reader, token_end) != csv_reader_separator && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
+                    while ((buffer_reader_available(reader) > token_end || !reader->end_reached) && buffer_reader_current_char(reader, token_end) != csv_reader_separator && buffer_reader_current_char(reader, token_end) != '\n' && buffer_reader_current_char(reader, token_end) != EOF)
                     {
                         ++token_end;
-                    };
+                    }
 
                     int space_pos = count_spaces_previous(reader, token_end);
 
@@ -181,16 +188,17 @@ csv_contents *csv_reader_read_file(char *path)
             }
         }
     }
+
     contents->columns = 0;
     contents->lines = 0;
     if (contents->first)
     {
-        csv_token *last_token = contents->first;
-        while (last_token->next)
+        csv_token *token = contents->first;
+        while (token->next)
         {
-            contents->columns = MAX(contents->columns, last_token->x);
-            contents->lines = MAX(contents->lines, last_token->y);
-            last_token = last_token->next;
+            contents->columns = MAX(contents->columns, token->x);
+            contents->lines = MAX(contents->lines, token->y);
+            token = token->next;
         }
         contents->columns++;
         contents->lines++;
