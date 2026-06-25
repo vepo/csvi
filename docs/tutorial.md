@@ -100,7 +100,7 @@ Use `:col 5` or arrow keys to move across.
 ## Editing cells
 
 1. Move to a cell and press `i` or `Insert`.
-2. Type the new value. Use `←` / `→` to move within the cell.
+2. Type the new value in the **edit preview** line above the status bar (full terminal width, scrolls with `<` / `>`). Changed characters are underlined; `EDIT n/m*` shows cursor position and unsaved edits within the cell.
 3. Press `Enter` to commit (updates memory; status bar shows `filename*`).
 4. Press `Esc` to cancel without changing the cell.
 

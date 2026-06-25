@@ -99,10 +99,17 @@ static void viewer_draw_status(csvi_viewer_t *viewer)
     const screen_size_t *scr = matrix_presentation_get_screen_size();
     status_bar_resize(scr->width, scr->height - 1);
 
-    const char *preview = viewer->cell_preview;
     if (input_mode_get() == INPUT_INSERT)
     {
-        preview = viewer->edit_buffer;
+        status_bar_draw_edit_preview(scr->height - 2,
+                                     scr->width,
+                                     viewer->edit_buffer,
+                                     viewer->edit_original,
+                                     viewer->edit_cursor);
+    }
+    else
+    {
+        matrix_presentation_hide_cursor();
     }
 
     status_bar_draw(viewer->file_path,
@@ -113,8 +120,13 @@ static void viewer_draw_status(csvi_viewer_t *viewer)
                     viewer->separator,
                     input_mode_get(),
                     viewer->file_modified,
-                    preview,
+                    input_mode_get() == INPUT_INSERT ? NULL : viewer->cell_preview,
                     viewer->status_message);
+}
+
+static void viewer_set_edit_margin(csvi_viewer_t *viewer, bool editing)
+{
+    viewer->properties.margin_bottom = editing ? 2 : 1;
 }
 
 static cell_draw_state_t viewer_cell_draw_state(const csvi_viewer_t *viewer, size_t x, size_t y)
@@ -516,9 +528,10 @@ static paint_action_t viewer_enter_insert(csvi_viewer_t *viewer)
     viewer->edit_dirty = false;
     viewer_clear_status(viewer);
 
+    viewer_set_edit_margin(viewer, true);
     input_mode_set(INPUT_INSERT);
     viewer->prev_selected = viewer->selected_cell;
-    return PAINT_CURSOR;
+    return PAINT_FULL;
 }
 
 static paint_action_t viewer_cancel_edit(csvi_viewer_t *viewer)
@@ -528,10 +541,11 @@ static paint_action_t viewer_cancel_edit(csvi_viewer_t *viewer)
     viewer->edit_cursor = strlen(viewer->edit_buffer);
     viewer->edit_dirty = false;
 
+    viewer_set_edit_margin(viewer, false);
     input_mode_set(INPUT_NORMAL);
     matrix_presentation_hide_cursor();
     viewer_clear_status(viewer);
-    return PAINT_CURSOR;
+    return PAINT_FULL;
 }
 
 static paint_action_t viewer_commit_cell(csvi_viewer_t *viewer)
@@ -566,6 +580,7 @@ static paint_action_t viewer_commit_cell(csvi_viewer_t *viewer)
     viewer->edit_original[sizeof(viewer->edit_original) - 1] = '\0';
     viewer->edit_dirty = false;
 
+    viewer_set_edit_margin(viewer, false);
     input_mode_set(INPUT_NORMAL);
     matrix_presentation_hide_cursor();
     viewer_clear_status(viewer);
@@ -574,10 +589,10 @@ static paint_action_t viewer_commit_cell(csvi_viewer_t *viewer)
     size_t row_after = viewport_cache_row_height(viewer->cache, viewer->selected_cell.y);
     if (col_before != col_after || row_before != row_after)
     {
-        return PAINT_VIEWPORT;
+        return PAINT_FULL;
     }
 
-    return PAINT_CURSOR;
+    return PAINT_FULL;
 }
 
 static bool viewer_is_navigation_key(int key)

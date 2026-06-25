@@ -27,7 +27,7 @@ CSVI is a cell-grid viewer: navigation moves one cell at a time, the status bar 
 
 ## Editing (INSERT mode)
 
-Press `i` or `Insert` on the selected cell to edit in place. The cell uses a distinct color (cyan when color is enabled). The status bar shows `INSERT` and the live draft.
+Press `i` or `Insert` on the selected cell to edit in place. The cell uses a distinct color (cyan when color is enabled). A full-width **edit preview** line appears above the status bar with horizontal scroll (`<` / `>`), cursor position (`EDIT n/m`), and underlined changed characters (`*` when modified).
 
 | Key | INSERT mode |
 |-----|-------------|

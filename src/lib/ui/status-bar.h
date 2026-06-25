@@ -19,5 +19,10 @@ void status_bar_draw(const char *filename,
                      const char *line_text,
                      const char *message);
 void status_bar_draw_input(input_mode_t mode, const char *prefix, const char *input);
+void status_bar_draw_edit_preview(int screen_row,
+                                  int screen_width,
+                                  const char *text,
+                                  const char *original,
+                                  size_t cursor);
 
 #endif

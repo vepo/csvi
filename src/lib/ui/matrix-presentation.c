@@ -226,6 +226,7 @@ void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
                                    const matrix_config_t *config,
                                    const matrix_properties_t *properties)
 {
+    (void)edit_cursor_pos;
     if (!grid_window || !config || !viewport_pos)
     {
         return;
@@ -262,13 +263,6 @@ void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
     if (display_options.grid_enabled && viewport_pos->x > 0)
     {
         mvwvline(grid_window, py, px - 1, '|', cell_h);
-    }
-
-    if (state == CELL_DRAW_EDITING && grid_window)
-    {
-        int cursor_screen_y = properties->margin_top + py + (int)properties->cell_padding_top;
-        int cursor_screen_x = properties->margin_left + px + (int)properties->cell_padding_left + (int)edit_cursor_pos;
-        matrix_presentation_show_cell_cursor(cursor_screen_y, cursor_screen_x);
     }
 }
 
