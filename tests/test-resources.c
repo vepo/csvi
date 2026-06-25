@@ -1,8 +1,10 @@
 #include "test-resources.h"
 
-#include <stdio.h>
-#include <string.h>
 #include <check.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #define LINE_BREAK_CONTENTS "Description;value1;value 2;\"value;\";\"value 5\"\"\"\n\
 This is a csv file;\"Value with line\n\
@@ -39,7 +41,20 @@ void write_file(char *resource_name, char *contents)
 
 char *test_resource_get(char *resource_key)
 {
-    char *resource_name = tmpnam(NULL);
+    char template[] = "/tmp/csvi-test-XXXXXX";
+    int fd = mkstemp(template);
+    if (fd == -1)
+    {
+        ck_abort_msg("Could not create temp file");
+    }
+    close(fd);
+
+    char *resource_name = strdup(template);
+    if (!resource_name)
+    {
+        ck_abort_msg("Could not allocate temp file path");
+    }
+
     if (strncmp(resource_key, "LINE_BREAK_CONTENTS", 19) == 0)
     {
         write_file(resource_name, LINE_BREAK_CONTENTS);
