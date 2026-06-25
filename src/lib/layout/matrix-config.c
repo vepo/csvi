@@ -53,24 +53,36 @@ void matrix_config_load_cell_info(char *cell_data, cell_info_t *cell_info)
     }
 }
 
-bool can_show(const screen_size_t *available,
-              const matrix_properties_t *properties,
-              const size_t *widths,
-              const size_t *heights,
-              const screen_size_t *possible)
+bool layout_can_show_sizes(const screen_size_t *grid_px,
+                           const matrix_properties_t *properties,
+                           const size_t *widths,
+                           const size_t *heights,
+                           const screen_size_t *cell_counts)
 {
-    int available_width = available->width - properties->margin_right - properties->margin_left;
-    for (size_t index = 0; index < possible->width && available_width >= 0; ++index)
+    int available_width = grid_px->width;
+    for (size_t index = 0; index < cell_counts->width && available_width >= 0; ++index)
     {
-        available_width -= widths[index] + properties->cell_padding_left + properties->cell_padding_right;
+        available_width -= (int)(widths[index] + properties->cell_padding_left + properties->cell_padding_right);
     }
 
-    int available_height = available->height - properties->margin_top - properties->margin_bottom;
-    for (size_t index = 0; index < possible->height && available_height >= 0; ++index)
+    int available_height = grid_px->height;
+    for (size_t index = 0; index < cell_counts->height && available_height >= 0; ++index)
     {
-        available_height -= heights[index] + properties->cell_padding_top + properties->cell_padding_bottom;
+        available_height -= (int)(heights[index] + properties->cell_padding_top + properties->cell_padding_bottom);
     }
     return available_width >= 0 && available_height >= 0;
+}
+
+static bool can_show(const screen_size_t *available,
+                     const matrix_properties_t *properties,
+                     const size_t *widths,
+                     const size_t *heights,
+                     const screen_size_t *possible)
+{
+    screen_size_t grid_px = {
+        .width = available->width - (int)(properties->margin_right + properties->margin_left),
+        .height = available->height - (int)(properties->margin_top + properties->margin_bottom)};
+    return layout_can_show_sizes(&grid_px, properties, widths, heights, possible);
 }
 
 bool can_fit(const screen_size_t *available,

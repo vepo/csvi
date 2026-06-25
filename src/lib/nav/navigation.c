@@ -177,6 +177,7 @@ NavigationResult navigate_row_start(coordinates_t *top_cell,
 
 NavigationResult navigate_row_end(coordinates_t *top_cell,
                                   coordinates_t *cursor_position,
+                                  const screen_size_t *screen_size,
                                   size_t num_columns)
 {
     coordinates_t top_before = *top_cell;
@@ -193,6 +194,11 @@ NavigationResult navigate_row_end(coordinates_t *top_cell,
         if (top_cell->x > cursor_position->x)
         {
             top_cell->x = cursor_position->x;
+        }
+        else if (screen_size && screen_size->width > 0 &&
+                 top_cell->x + (size_t)screen_size->width <= cursor_position->x)
+        {
+            top_cell->x = cursor_position->x - (size_t)screen_size->width + 1;
         }
         return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
     }
@@ -290,6 +296,14 @@ NavigationResult navigate_page_right(coordinates_t *top_cell,
         else
         {
             cursor_position->x = num_columns - 1;
+            if (page > 0 && top_cell->x + page <= cursor_position->x)
+            {
+                top_cell->x = cursor_position->x - page + 1;
+            }
+            else if (top_cell->x > cursor_position->x)
+            {
+                top_cell->x = cursor_position->x;
+            }
         }
         return nav_result(&top_before, top_cell, &cursor_before, cursor_position, CURSOR_UPDATED);
     }

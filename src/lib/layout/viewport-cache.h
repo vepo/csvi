@@ -19,4 +19,12 @@ void viewport_cache_dispose(viewport_cache_t *cache);
 size_t viewport_cache_col_width(const viewport_cache_t *cache, size_t col);
 size_t viewport_cache_row_height(const viewport_cache_t *cache, size_t row);
 
+void viewport_cache_get_most_expanded(const viewport_cache_t *cache,
+                                      const coordinates_t *top_cell,
+                                      const screen_size_t *grid_px,
+                                      const matrix_properties_t *properties,
+                                      size_t max_columns,
+                                      size_t max_lines,
+                                      screen_size_t *visible_cells);
+
 #endif

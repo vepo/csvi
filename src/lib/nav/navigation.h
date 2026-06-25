@@ -21,7 +21,10 @@ NavigationResult navigate_right(coordinates_t *top_cell, coordinates_t *cursor_p
 NavigationResult navigate_page_up(coordinates_t *top_cell, coordinates_t *cursor_position, const screen_size_t *screen_size);
 NavigationResult navigate_page_down(coordinates_t *top_cell, coordinates_t *cursor_position, const screen_size_t *screen_size, size_t num_lines);
 NavigationResult navigate_row_start(coordinates_t *top_cell, coordinates_t *cursor_position, size_t num_columns);
-NavigationResult navigate_row_end(coordinates_t *top_cell, coordinates_t *cursor_position, size_t num_columns);
+NavigationResult navigate_row_end(coordinates_t *top_cell,
+                                  coordinates_t *cursor_position,
+                                  const screen_size_t *screen_size,
+                                  size_t num_columns);
 NavigationResult navigate_first_row(coordinates_t *top_cell, coordinates_t *cursor_position);
 NavigationResult navigate_last_row(coordinates_t *top_cell, coordinates_t *cursor_position, size_t num_lines);
 NavigationResult navigate_page_left(coordinates_t *top_cell, coordinates_t *cursor_position, const screen_size_t *screen_size);

@@ -1,6 +1,7 @@
 #ifndef CSVI_MATRIX_CONFIG_H_
 #define CSVI_MATRIX_CONFIG_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #include "io/csv-reader.h"
@@ -14,11 +15,17 @@ typedef struct matrix_config
     size_t columns;
 } matrix_config_t;
 
+bool layout_can_show_sizes(const screen_size_t *grid_px,
+                           const matrix_properties_t *properties,
+                           const size_t *widths,
+                           const size_t *heights,
+                           const screen_size_t *cell_counts);
+
 void matrix_config_get_most_expanded(const screen_size_t *available,
                                      const matrix_properties_t *properties,
                                      csv_token *start_token,
-                                     size_t max_lines,
                                      size_t max_columns,
+                                     size_t max_lines,
                                      screen_size_t *used);
 
 void matrix_config_load_sizes(csv_token *start_token,

@@ -97,3 +97,103 @@ size_t viewport_cache_row_height(const viewport_cache_t *cache, size_t row)
     }
     return cache->row_height[row];
 }
+
+static bool cache_sizes_fit(const viewport_cache_t *cache,
+                            const coordinates_t *top_cell,
+                            const screen_size_t *grid_px,
+                            const matrix_properties_t *properties,
+                            const screen_size_t *cell_counts)
+{
+    size_t widths[cell_counts->width];
+    size_t heights[cell_counts->height];
+
+    for (size_t vx = 0; vx < (size_t)cell_counts->width; ++vx)
+    {
+        size_t col = top_cell->x + vx;
+        widths[vx] = viewport_cache_col_width(cache, col);
+    }
+
+    for (size_t vy = 0; vy < (size_t)cell_counts->height; ++vy)
+    {
+        size_t row = top_cell->y + vy;
+        heights[vy] = viewport_cache_row_height(cache, row);
+    }
+
+    return layout_can_show_sizes(grid_px, properties, widths, heights, cell_counts);
+}
+
+void viewport_cache_get_most_expanded(const viewport_cache_t *cache,
+                                      const coordinates_t *top_cell,
+                                      const screen_size_t *grid_px,
+                                      const matrix_properties_t *properties,
+                                      size_t max_columns,
+                                      size_t max_lines,
+                                      screen_size_t *visible_cells)
+{
+    if (!cache || !top_cell || !grid_px || !properties || !visible_cells)
+    {
+        return;
+    }
+
+    visible_cells->width = 1;
+    visible_cells->height = 1;
+
+    bool can_grow_xy = true;
+    bool can_grow_x = true;
+    bool can_grow_y = true;
+
+    while (can_grow_xy || can_grow_x || can_grow_y)
+    {
+        if (can_grow_xy)
+        {
+            screen_size_t next = {
+                .height = visible_cells->height + 1,
+                .width = visible_cells->width + 1};
+
+            if (next.width + top_cell->x <= max_columns && next.height + top_cell->y <= max_lines &&
+                cache_sizes_fit(cache, top_cell, grid_px, properties, &next))
+            {
+                visible_cells->height = next.height;
+                visible_cells->width = next.width;
+            }
+            else
+            {
+                can_grow_xy = false;
+            }
+        }
+        else if (can_grow_y)
+        {
+            screen_size_t next = {
+                .height = visible_cells->height + 1,
+                .width = visible_cells->width};
+
+            if (next.width + top_cell->x <= max_columns && next.height + top_cell->y <= max_lines &&
+                cache_sizes_fit(cache, top_cell, grid_px, properties, &next))
+            {
+                visible_cells->height = next.height;
+                visible_cells->width = next.width;
+            }
+            else
+            {
+                can_grow_y = false;
+            }
+        }
+        else if (can_grow_x)
+        {
+            screen_size_t next = {
+                .height = visible_cells->height,
+                .width = visible_cells->width + 1};
+
+            if (next.width + top_cell->x <= max_columns && next.height + top_cell->y <= max_lines &&
+                cache_sizes_fit(cache, top_cell, grid_px, properties, &next))
+            {
+                visible_cells->height = next.height;
+                visible_cells->width = next.width;
+            }
+            else
+            {
+                can_grow_x = false;
+            }
+        }
+    }
+}

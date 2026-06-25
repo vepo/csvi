@@ -30,7 +30,7 @@ Press `q` or `:q` to quit.
 
 When CSVI starts you see:
 
-- **Grid** — one screenful of cells. The selected cell uses reverse video (or color with `--color=always`).
+- **Grid** — one screenful of cells. With color enabled (default `auto`), adjacent cells alternate light/dark backgrounds so columns and rows are easy to scan; the selected cell is highlighted in green. Without color, the selected cell uses reverse video.
 - **Status bar** — bottom line with current row/column, mode, and messages.
 
 Example status text in normal mode:

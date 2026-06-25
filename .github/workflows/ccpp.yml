@@ -13,12 +13,17 @@ jobs:
       run: autoreconf -ivf
     - name: Configure with coverage
       run: ./configure --enable-coverage
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
     - name: Configure Sonar
       run: |
         wget -q https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
         unzip -q build-wrapper-linux-x86.zip
-        wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip
-        unzip -q sonar-scanner-cli-4.4.0.2170-linux.zip
+        wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.0.2.4839-linux-x64.zip
+        unzip -q sonar-scanner-cli-7.0.2.4839-linux-x64.zip
     - name: Run tests with build wrapper
       run: |
         ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output make clean
@@ -33,7 +38,7 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       run: |
         VERSION=$(./configure --version | head -n 1 | awk '{print $3}')
-        ./sonar-scanner-4.4.0.2170-linux/bin/sonar-scanner \
+        ./sonar-scanner-7.0.2.4839-linux-x64/bin/sonar-scanner \
           -Dsonar.organization=vepo-github \
           -Dsonar.projectKey=csv-viewer \
           -Dsonar.sources=src \

@@ -33,6 +33,7 @@ TESTS = csv_parser_tests \
         cell_commands_tests \
         matrix_tests \
         navigation_tests \
+        viewport_cache_tests \
         buffer_reader_tests \
         viewer_tests \
         search_tests
@@ -41,6 +42,7 @@ check_PROGRAMS = csv_parser_tests \
                  cell_commands_tests \
                  matrix_tests \
                  navigation_tests \
+                 viewport_cache_tests \
                  buffer_reader_tests \
                  viewer_tests \
                  search_tests
@@ -54,6 +56,7 @@ if DEBUG
   cell_commands_tests_CFLAGS = $(TEST_CFLAGS) -g
   matrix_tests_CFLAGS = $(TEST_CFLAGS) -g
   navigation_tests_CFLAGS = $(TEST_CFLAGS) -g
+  viewport_cache_tests_CFLAGS = $(TEST_CFLAGS) -g
   buffer_reader_tests_CFLAGS = $(TEST_CFLAGS) -g
   search_tests_CFLAGS = $(TEST_CFLAGS) -g
   viewer_tests_CFLAGS = $(TEST_CFLAGS) -g -DCSVI_TEST
@@ -62,6 +65,7 @@ else
   cell_commands_tests_CFLAGS = $(TEST_CFLAGS)
   matrix_tests_CFLAGS = $(TEST_CFLAGS)
   navigation_tests_CFLAGS = $(TEST_CFLAGS)
+  viewport_cache_tests_CFLAGS = $(TEST_CFLAGS)
   buffer_reader_tests_CFLAGS = $(TEST_CFLAGS)
   search_tests_CFLAGS = $(TEST_CFLAGS)
   viewer_tests_CFLAGS = $(TEST_CFLAGS) -DCSVI_TEST
@@ -82,6 +86,10 @@ matrix_tests_LDADD = $(TEST_LDADD)
 navigation_tests_LDFLAGS = $(TEST_LDFLAGS)
 navigation_tests_SOURCES = navigation-tests.c
 navigation_tests_LDADD = $(TEST_LDADD)
+
+viewport_cache_tests_LDFLAGS = $(TEST_LDFLAGS)
+viewport_cache_tests_SOURCES = viewport-cache-tests.c
+viewport_cache_tests_LDADD = $(TEST_LDADD)
 
 buffer_reader_tests_LDFLAGS = $(TEST_LDFLAGS)
 buffer_reader_tests_SOURCES = buffer-reader-tests.c

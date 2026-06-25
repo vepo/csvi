@@ -24,11 +24,13 @@ screen_size_t *matrix_presentation_get_grid_size(const matrix_properties_t *prop
 
 void matrix_presentation_clear_grid(const matrix_properties_t *properties);
 void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
-                                     const char *data,
-                                     bool selected,
-                                     bool search_match,
-                                     const matrix_config_t *config,
-                                     const matrix_properties_t *properties);
+                                   size_t abs_x,
+                                   size_t abs_y,
+                                   const char *data,
+                                   bool selected,
+                                   bool search_match,
+                                   const matrix_config_t *config,
+                                   const matrix_properties_t *properties);
 
 void matrix_presentation_beep(void);
 void matrix_presentation_refresh_partial(void);

@@ -13,9 +13,16 @@ arrow keys or
 The status bar shows the current row, column, and mode.
 .PP
 Default appearance is monochrome (reverse video for the selected cell).
+When color is enabled
+.RB ( \-\-color=auto
+by default, or
+.B \-\-color=always ),
+cells use alternating light/dark backgrounds and the selected cell is highlighted in green.
 Use
-.B \-\-color=always
-for color when supported.
+.B \-\-color=never
+or
+.B NO_COLOR
+to force monochrome.
 .SH OPTIONS
 .TP
 .BR \-s ", " \-\-separator= \fICHAR\fR

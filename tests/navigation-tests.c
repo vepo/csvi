@@ -181,6 +181,18 @@ START_TEST(test_navigation_page_down)
 }
 END_TEST
 
+START_TEST(test_navigation_right_viewport_scroll)
+{
+    coordinates_t top_cell = {.x = 0, .y = 0};
+    coordinates_t cursor_position = {.x = 2, .y = 0};
+    screen_size_t screen_size = {.width = 3, .height = 10};
+
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_right(&top_cell, &cursor_position, &screen_size, 20));
+    ck_assert_int_eq(3, cursor_position.x);
+    ck_assert_int_eq(1, top_cell.x);
+}
+END_TEST
+
 START_TEST(test_navigation_home)
 {
     coordinates_t top_cell = {.x = 0, .y = 0};
@@ -200,12 +212,15 @@ START_TEST(test_navigation_end)
 {
     coordinates_t top_cell = {.x = 0, .y = 0};
     coordinates_t cursor_position = {.x = 0, .y = 0};
+    screen_size_t screen_size = {.width = 3, .height = 10};
 
-    ck_assert_int_eq(CURSOR_UPDATED, navigate_row_end(&top_cell, &cursor_position, 10));
+    ck_assert_int_eq(CURSOR_UPDATED, navigate_row_end(&top_cell, &cursor_position, &screen_size, 10));
     ck_assert_int_eq(9, cursor_position.x);
+    ck_assert_int_eq(7, top_cell.x);
 
     cursor_position.x = 9;
-    ck_assert_int_eq(BEEP, navigate_row_end(&top_cell, &cursor_position, 10));
+    top_cell.x = 7;
+    ck_assert_int_eq(BEEP, navigate_row_end(&top_cell, &cursor_position, &screen_size, 10));
 }
 END_TEST
 
@@ -218,6 +233,7 @@ Suite *matrix_test_suite(void)
     tcase_add_test(tc_core, test_navigation_down);
     tcase_add_test(tc_core, test_navigation_left);
     tcase_add_test(tc_core, test_navigation_right);
+    tcase_add_test(tc_core, test_navigation_right_viewport_scroll);
     tcase_add_test(tc_core, test_navigation_page_up);
     tcase_add_test(tc_core, test_navigation_page_down);
     tcase_add_test(tc_core, test_navigation_home);

@@ -15,6 +15,13 @@ static matrix_display_options_t display_options = {.color_enabled = false,
                                                    .grid_enabled = false,
                                                    .header_enabled = false};
 
+enum
+{
+    COLOR_PAIR_EVEN = 1,
+    COLOR_PAIR_ODD = 2,
+    COLOR_PAIR_SELECTED = 3,
+};
+
 static bool use_color(void)
 {
     return display_options.color_enabled && has_colors();
@@ -65,7 +72,9 @@ void matrix_presentation_init(const matrix_display_options_t *options)
     if (display_options.color_enabled)
     {
         start_color();
-        init_pair(1, COLOR_BLACK, COLOR_WHITE);
+        init_pair(COLOR_PAIR_EVEN, COLOR_BLACK, COLOR_WHITE);
+        init_pair(COLOR_PAIR_ODD, COLOR_WHITE, COLOR_BLACK);
+        init_pair(COLOR_PAIR_SELECTED, COLOR_BLACK, COLOR_GREEN);
     }
 
     noecho();
@@ -118,6 +127,7 @@ void matrix_presentation_request_stop(void)
 void matrix_presentation_beep(void)
 {
     beep();
+    flash();
 }
 
 void matrix_presentation_clear_grid(const matrix_properties_t *properties)
@@ -161,7 +171,41 @@ static void calculate_offsets(const coordinates_t *cell,
     }
 }
 
+static chtype cell_display_attrs(size_t abs_x, size_t abs_y, bool selected, bool search_match)
+{
+    if (use_color())
+    {
+        int pair = selected ? COLOR_PAIR_SELECTED
+                            : ((abs_x + abs_y) % 2 == 0 ? COLOR_PAIR_ODD : COLOR_PAIR_EVEN);
+        chtype attrs = COLOR_PAIR(pair);
+        if (search_match && !selected)
+        {
+            attrs |= A_UNDERLINE;
+        }
+        return attrs;
+    }
+
+    if (selected)
+    {
+        return A_REVERSE;
+    }
+    return A_NORMAL;
+}
+
+static void fill_cell_area(int py, int px, int cell_h, int cell_w, chtype attrs)
+{
+    wattrset(grid_window, attrs);
+    for (int row = 0; row < cell_h; ++row)
+    {
+        wmove(grid_window, py + row, px);
+        whline(grid_window, ' ', cell_w);
+    }
+    wattrset(grid_window, A_NORMAL);
+}
+
 void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
+                                   size_t abs_x,
+                                   size_t abs_y,
                                    const char *data,
                                    bool selected,
                                    bool search_match,
@@ -186,29 +230,20 @@ void matrix_presentation_draw_cell(const coordinates_t *viewport_pos,
     int py = position.y;
     int px = position.x;
 
-    if (selected)
+    chtype attrs = cell_display_attrs(abs_x, abs_y, selected, search_match);
+
+    if (use_color() || selected)
     {
-        wattron(grid_window, A_REVERSE);
-    }
-    else if (search_match && use_color())
-    {
-        wattron(grid_window, A_UNDERLINE);
+        fill_cell_area(py, px, cell_h, cell_w, attrs);
     }
 
+    wattrset(grid_window, attrs);
     wmove(grid_window, py + (int)properties->cell_padding_top, px + (int)properties->cell_padding_left);
     if (data)
     {
         wprintw(grid_window, "%.*s", (int)config->column_width[viewport_pos->x], data);
     }
-
-    if (selected)
-    {
-        wattroff(grid_window, A_REVERSE);
-    }
-    else if (search_match && use_color())
-    {
-        wattroff(grid_window, A_UNDERLINE);
-    }
+    wattrset(grid_window, A_NORMAL);
 
     if (display_options.grid_enabled && viewport_pos->x > 0)
     {

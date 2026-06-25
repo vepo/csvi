@@ -56,7 +56,7 @@ Commands use **1-based** row and column numbers (internally converted to 0-based
 | Flag | Description |
 |------|-------------|
 | `-s`, `--separator=CHAR` | Cell separator (default `;`) |
-| `--color=auto\|never\|always` | Color mode (default `auto`; respects `NO_COLOR`) |
+| `--color=auto\|never\|always` | Color mode (default `auto`; respects `NO_COLOR`). When on, cells use alternating backgrounds and the selection is green. |
 | `--grid` | Draw `\|` column separators |
 | `--header` | Freeze row 0 as header |
 | `-V`, `--verbose` | Log diagnostics to stderr |

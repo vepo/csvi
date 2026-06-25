@@ -130,10 +130,19 @@ static matrix_config_t *viewer_build_viewport_config(csvi_viewer_t *viewer)
 
 static void viewer_recompute_viewport(csvi_viewer_t *viewer)
 {
-    const screen_size_t *scr = matrix_presentation_get_screen_size();
-    csv_token *token = csv_reader_get_token(viewer->top_cell.x, viewer->top_cell.y, viewer->file);
+    const screen_size_t *grid_px = matrix_presentation_get_grid_size(&viewer->properties);
     screen_size_t current = {.width = 1, .height = 1};
-    matrix_config_get_most_expanded(scr, &viewer->properties, token, viewer->file->columns, viewer->file->lines, &current);
+
+    if (viewer->cache)
+    {
+        viewport_cache_get_most_expanded(viewer->cache,
+                                         &viewer->top_cell,
+                                         grid_px,
+                                         &viewer->properties,
+                                         viewer->file->columns,
+                                         viewer->file->lines,
+                                         &current);
+    }
 
     if (viewer->header_enabled && viewer->top_cell.y == 0 && current.height > 1)
     {
@@ -167,6 +176,8 @@ static void viewer_draw_cell_at(csvi_viewer_t *viewer, size_t abs_x, size_t abs_
     coordinates_t vp = {.x = abs_x - viewer->top_cell.x, .y = abs_y - viewer->top_cell.y};
     csv_token *token = csv_reader_get_token(abs_x, abs_y, viewer->file);
     matrix_presentation_draw_cell(&vp,
+                                  abs_x,
+                                  abs_y,
                                   token ? token->data : "",
                                   selected,
                                   cell_is_search_match(viewer, abs_x, abs_y),
@@ -271,6 +282,17 @@ static void viewer_jump_to(csvi_viewer_t *viewer, size_t x, size_t y)
     if (viewer->selected_cell.y < viewer->top_cell.y)
     {
         viewer->top_cell.y = viewer->selected_cell.y;
+    }
+
+    size_t vw = (size_t)viewer->viewport_cells.width;
+    size_t vh = (size_t)viewer->viewport_cells.height;
+    if (vw > 0 && viewer->selected_cell.x >= viewer->top_cell.x + vw)
+    {
+        viewer->top_cell.x = viewer->selected_cell.x - vw + 1;
+    }
+    if (vh > 0 && viewer->selected_cell.y >= viewer->top_cell.y + vh)
+    {
+        viewer->top_cell.y = viewer->selected_cell.y - vh + 1;
     }
 }
 
@@ -481,7 +503,10 @@ static paint_action_t viewer_handle_normal(csvi_viewer_t *viewer, int key)
                                &cursor_before);
     case KEY_END:
         return viewer_navigate(viewer,
-                               navigate_row_end(&viewer->top_cell, &viewer->selected_cell, viewer->file->columns),
+                               navigate_row_end(&viewer->top_cell,
+                                                &viewer->selected_cell,
+                                                &viewer->presented_matrix,
+                                                viewer->file->columns),
                                &top_before,
                                &cursor_before);
     case KEY_NPAGE:
