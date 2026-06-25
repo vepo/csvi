@@ -1,62 +1,76 @@
 name: C/C++ CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     runs-on: ubuntu-latest
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
     steps:
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt install -y libncurses5-dev libncursesw5-dev pkg-config check unzip
-    - name: autoreconf
-      run: autoreconf -ivf
-    - name: Configure with coverage
-      run: ./configure --enable-coverage
-    - name: Install Build Wrapper
-      uses: SonarSource/sonarqube-scan-action/install-build-wrapper@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
-    - name: Run Build Wrapper
-      run: |
-        build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean
-        build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make check
-        for source_file in $(find src -name '*.c')
-        do
-            cd $(dirname "$source_file")
-            gcov $(basename "$source_file") || true
-            cd -
-        done
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0      
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      with:
-        args: >
-          --define "sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
-    - name: Configure release build
-      run: ./configure
-    - name: Build and test
-      run: |
-        make clean
-        make
-        make check
-    - name: make dist
-      run: make dist
-    - name: Upload dist artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: csv-viewer
-        path: csv-viewer-*.tar.gz
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake libtool pkg-config \
+            libncurses-dev check unzip
+
+      - name: Bootstrap and configure (coverage)
+        run: |
+          ./bootstrap
+          ./configure --enable-coverage
+
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+
+      - name: Build and test with coverage
+        run: |
+          build-wrapper-linux-x86-64 --out-dir "${{ env.BUILD_WRAPPER_OUT_DIR }}" make clean
+          build-wrapper-linux-x86-64 --out-dir "${{ env.BUILD_WRAPPER_OUT_DIR }}" make check
+          find src -name '*.c' -print0 | while IFS= read -r -d '' source_file; do
+            (cd "$(dirname "$source_file")" && gcov "$(basename "$source_file")") || true
+          done
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            --define "sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
+
+      - name: Release build and distcheck
+        run: |
+          make distclean
+          ./configure
+          make distcheck
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: csv-viewer
+          path: csv-viewer-*.tar.gz
 
   create-installer:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt install -y libncurses5-dev libncursesw5-dev pkg-config check unzip
-      - run: bash build-installer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake libtool pkg-config \
+            libncurses-dev check unzip
+
+      - name: Build installer
+        run: bash build-installer
+
       - uses: actions/upload-artifact@v4
         with:
           name: get-csvi

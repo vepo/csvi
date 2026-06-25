@@ -1,5 +1,3 @@
-AUTOMAKE_OPTIONS = subdir-objects
-
 if COVERAGE
   COVERAGE_CFLAG = -ftest-coverage -fprofile-arcs
 else

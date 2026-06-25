@@ -12,7 +12,7 @@ Install a prebuilt binary:
 curl https://vepo.github.io/assets/bin/get-csvi | sudo bash
 ```
 
-Or build from source (see [README.md](../README.md)). Then open any CSV file:
+Or build from source (see [docs/build.md](./build.md)). Then open any CSV file:
 
 ```bash
 csvi data.csv

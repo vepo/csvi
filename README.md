@@ -15,11 +15,10 @@ curl https://vepo.github.io/assets/bin/get-csvi | sudo bash
 
 ## Build
 
-```bash
-sudo apt update
-sudo apt install gcc libtool make check pkg-config libncurses5-dev -y
+See **[docs/build.md](docs/build.md)** for prerequisites, configure options, out-of-tree builds, coverage, and troubleshooting.
 
-autoreconf -ivf
+```bash
+./bootstrap
 ./configure
 make
 make check
@@ -40,6 +39,7 @@ csvi -h                   # help
 **Breaking change:** legacy `:cN`, `:-1`, `Esc`-as-command, and `Home`/`End` as horizontal page keys are removed. See [Commands.md](./Commands.md) for the new key map and migration table.
 
 See [docs/tutorial.md](./docs/tutorial.md) for a getting-started guide.  
+See [docs/build.md](./docs/build.md) for build instructions.  
 See [Commands.md](./Commands.md) for key bindings and `:` commands.  
 See [docs/architecture.md](./docs/architecture.md) for module layout.
 
@@ -56,13 +56,13 @@ sudo cp completions/csvi.zsh /usr/share/zsh/site-functions/_csvi
 ## Code coverage
 
 ```bash
-./conf-clean
-./conf-gen
 ./configure --enable-coverage
 make check
 lcov -c --directory src --directory tests --output-file coverage.info
 genhtml coverage.info --output-directory coverage-report
 ```
+
+See [docs/build.md](docs/build.md) for details.
 
 ## Contributing
 
