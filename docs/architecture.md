@@ -33,6 +33,7 @@ flowchart TB
     end
     subgraph io [src/lib/io]
         csvReader[csv-reader.c]
+        csvWriter[csv-writer.c]
         bufferReader[buffer-reader.c]
     end
     subgraph common [src/lib/common]
@@ -50,6 +51,7 @@ flowchart TB
     viewer --> search
     viewer --> viewportCache
     viewer --> csvReader
+    viewer --> csvWriter
     commands --> cellCmd
     presentation --> matrixConfig
     presentation --> viewportCache
@@ -65,7 +67,7 @@ flowchart TB
 | Module | Path | Responsibility |
 |--------|------|----------------|
 | **common** | `src/lib/common/` | Exit codes, stderr logging, shared macros |
-| **io** | `src/lib/io/` | Chunked file reads, CSV tokenization, token index |
+| **io** | `src/lib/io/` | Chunked file reads, CSV tokenization, token index, cell updates, CSV write |
 | **layout** | `src/lib/layout/` | Viewport/cell sizing, precomputed layout cache |
 | **ui** | `src/lib/ui/` | ncurses init, single-window grid render, status bar, input modes |
 | **nav** | `src/lib/nav/` | Pure cursor/viewport movement |
@@ -79,8 +81,9 @@ flowchart TB
 2. **Parse**: `buffer-reader` reads chunks; `csv-reader` builds a linked list of `csv_token` and a dense `index[]` for O(1) lookup
 3. **Layout cache**: `viewport_cache_build` precomputes column widths and row heights once per file
 4. **Run**: `csvi_viewer_run` → `matrix_presentation_run(viewer_on_key)` with `timeout(50)` event loop
-5. **Input**: keys dispatch by input mode (NORMAL/COMMAND/SEARCH/HELP); navigation returns `CURSOR_UPDATED` or `BEEP`
-6. **Paint**: viewer compares `top_cell` before/after navigation to choose incremental strategy:
+5. **Input**: keys dispatch by input mode (NORMAL/COMMAND/SEARCH/HELP/INSERT); navigation returns `CURSOR_UPDATED` or `BEEP`
+6. **Edit**: `i`/`Insert` enters INSERT on the selected cell; `Enter` commits via `csv_reader_set_cell`; `:w` writes via `csv_writer_write_file`
+7. **Paint**: viewer compares `top_cell` before/after navigation to choose incremental strategy:
 
 | `paint_action_t` | When |
 |------------------|------|
@@ -136,6 +139,8 @@ Build adds `-I$(top_srcdir)/src/lib`. Cross-module includes use layer prefixes:
 
 - Large files load fully into memory via buffer chain; index is `columns × lines` pointers
 - `:set sep=` does not re-parse in place — user must reload the file
+- Edits commit to memory on `Enter`; disk write requires `:w` or `:wq`
+- Grid cannot grow beyond loaded rows/columns in v1
 - UI layer requires ncurses; paint strategy and command parsing are unit-tested; rendering is not
 - Horizontal page keys are `Ctrl+H` / `Ctrl+L`
 

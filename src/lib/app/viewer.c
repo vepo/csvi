@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <curses.h>
 
 #include "app/search.h"
@@ -12,6 +13,7 @@
 #include "common/errors.h"
 #include "common/log.h"
 #include "io/csv-reader.h"
+#include "io/csv-writer.h"
 #include "layout/matrix-config.h"
 #include "layout/viewport-cache.h"
 #include "nav/navigation.h"
@@ -19,6 +21,8 @@
 #include "ui/matrix-presentation.h"
 #include "ui/paint.h"
 #include "ui/status-bar.h"
+
+#define CSVI_EDIT_BUFFER_SIZE 4096
 
 struct csvi_viewer
 {
@@ -38,10 +42,16 @@ struct csvi_viewer
     char input_buffer[256];
     char status_message[256];
     char cell_preview[256];
+    char edit_buffer[CSVI_EDIT_BUFFER_SIZE];
+    char edit_original[CSVI_EDIT_BUFFER_SIZE];
+    size_t edit_cursor;
     char separator;
     bool header_enabled;
     bool owns_file;
     bool has_search_match;
+    bool read_only;
+    bool file_modified;
+    bool edit_dirty;
     int exit_code;
 };
 
@@ -88,6 +98,20 @@ static void viewer_draw_status(csvi_viewer_t *viewer)
 {
     const screen_size_t *scr = matrix_presentation_get_screen_size();
     status_bar_resize(scr->width, scr->height - 1);
+
+    if (input_mode_get() == INPUT_INSERT)
+    {
+        status_bar_draw_edit_preview(scr->height - 2,
+                                     scr->width,
+                                     viewer->edit_buffer,
+                                     viewer->edit_original,
+                                     viewer->edit_cursor);
+    }
+    else
+    {
+        matrix_presentation_hide_cursor();
+    }
+
     status_bar_draw(viewer->file_path,
                     viewer->selected_cell.y,
                     viewer->file->lines,
@@ -95,8 +119,89 @@ static void viewer_draw_status(csvi_viewer_t *viewer)
                     viewer->file->columns,
                     viewer->separator,
                     input_mode_get(),
-                    viewer->cell_preview,
+                    viewer->file_modified,
+                    input_mode_get() == INPUT_INSERT ? NULL : viewer->cell_preview,
                     viewer->status_message);
+}
+
+static void viewer_set_edit_margin(csvi_viewer_t *viewer, bool editing)
+{
+    viewer->properties.margin_bottom = editing ? 2 : 1;
+}
+
+static cell_draw_state_t viewer_cell_draw_state(const csvi_viewer_t *viewer, size_t x, size_t y)
+{
+    if (input_mode_get() == INPUT_INSERT && x == viewer->selected_cell.x && y == viewer->selected_cell.y)
+    {
+        return CELL_DRAW_EDITING;
+    }
+    if (x == viewer->selected_cell.x && y == viewer->selected_cell.y)
+    {
+        return CELL_DRAW_SELECTED;
+    }
+    return CELL_DRAW_NORMAL;
+}
+
+static void viewer_edit_update_dirty(csvi_viewer_t *viewer)
+{
+    viewer->edit_dirty = strcmp(viewer->edit_buffer, viewer->edit_original) != 0;
+}
+
+static bool viewer_insert_blocks_navigation(csvi_viewer_t *viewer)
+{
+    (void)viewer;
+    matrix_presentation_beep();
+    viewer_set_status(viewer, "Commit (Enter) or cancel (Esc) first");
+    viewer_draw_status(viewer);
+    return true;
+}
+
+static void viewer_edit_insert_char(csvi_viewer_t *viewer, char ch)
+{
+    size_t len = strlen(viewer->edit_buffer);
+    if (len + 1 >= sizeof(viewer->edit_buffer))
+    {
+        return;
+    }
+
+    if (viewer->edit_cursor > len)
+    {
+        viewer->edit_cursor = len;
+    }
+
+    memmove(viewer->edit_buffer + viewer->edit_cursor + 1,
+            viewer->edit_buffer + viewer->edit_cursor,
+            len - viewer->edit_cursor + 1);
+    viewer->edit_buffer[viewer->edit_cursor] = ch;
+    viewer->edit_cursor++;
+    viewer_edit_update_dirty(viewer);
+}
+
+static void viewer_edit_backspace(csvi_viewer_t *viewer)
+{
+    if (viewer->edit_cursor == 0)
+    {
+        return;
+    }
+
+    size_t len = strlen(viewer->edit_buffer);
+    memmove(viewer->edit_buffer + viewer->edit_cursor - 1,
+            viewer->edit_buffer + viewer->edit_cursor,
+            len - viewer->edit_cursor + 1);
+    viewer->edit_cursor--;
+    viewer_edit_update_dirty(viewer);
+}
+
+static void viewer_edit_move_cursor(csvi_viewer_t *viewer, int delta)
+{
+    if (delta < 0 && viewer->edit_cursor > 0)
+    {
+        viewer->edit_cursor--;
+    }
+    else if (delta > 0 && viewer->edit_cursor < strlen(viewer->edit_buffer))
+    {
+        viewer->edit_cursor++;
+    }
 }
 
 static matrix_config_t *viewer_build_viewport_config(csvi_viewer_t *viewer)
@@ -188,7 +293,7 @@ static bool viewer_scroll_selection_into_view(csvi_viewer_t *viewer)
     return changed;
 }
 
-static void viewer_draw_cell_at(csvi_viewer_t *viewer, size_t abs_x, size_t abs_y, bool selected)
+static void viewer_draw_cell_at(csvi_viewer_t *viewer, size_t abs_x, size_t abs_y)
 {
     if (!viewer->viewport_config)
     {
@@ -203,13 +308,28 @@ static void viewer_draw_cell_at(csvi_viewer_t *viewer, size_t abs_x, size_t abs_
     }
 
     coordinates_t vp = {.x = abs_x - viewer->top_cell.x, .y = abs_y - viewer->top_cell.y};
-    csv_token *token = csv_reader_get_token(abs_x, abs_y, viewer->file);
+    cell_draw_state_t state = viewer_cell_draw_state(viewer, abs_x, abs_y);
+    const char *data;
+    size_t edit_cursor_pos = 0;
+
+    if (state == CELL_DRAW_EDITING)
+    {
+        data = viewer->edit_buffer;
+        edit_cursor_pos = viewer->edit_cursor;
+    }
+    else
+    {
+        csv_token *token = csv_reader_get_token(abs_x, abs_y, viewer->file);
+        data = (token && token->data) ? token->data : "";
+    }
+
     matrix_presentation_draw_cell(&vp,
                                   abs_x,
                                   abs_y,
-                                  token ? token->data : "",
-                                  selected,
+                                  data,
+                                  state,
                                   cell_is_search_match(viewer, abs_x, abs_y),
+                                  edit_cursor_pos,
                                   viewer->viewport_config,
                                   &viewer->properties);
 }
@@ -225,8 +345,7 @@ static void viewer_paint_full(csvi_viewer_t *viewer)
         {
             size_t x = viewer->top_cell.x + vx;
             size_t y = viewer->top_cell.y + vy;
-            bool selected = x == viewer->selected_cell.x && y == viewer->selected_cell.y;
-            viewer_draw_cell_at(viewer, x, y, selected);
+            viewer_draw_cell_at(viewer, x, y);
         }
     }
 
@@ -234,8 +353,13 @@ static void viewer_paint_full(csvi_viewer_t *viewer)
     {
         for (size_t vx = 0; vx < viewer->file->columns && vx < 20; ++vx)
         {
-            viewer_draw_cell_at(viewer, vx, 0, false);
+            viewer_draw_cell_at(viewer, vx, 0);
         }
+    }
+
+    if (input_mode_get() != INPUT_INSERT)
+    {
+        matrix_presentation_hide_cursor();
     }
 
     viewer_update_cell_preview(viewer);
@@ -244,8 +368,8 @@ static void viewer_paint_full(csvi_viewer_t *viewer)
 
 static void viewer_paint_cursor(csvi_viewer_t *viewer)
 {
-    viewer_draw_cell_at(viewer, viewer->prev_selected.x, viewer->prev_selected.y, false);
-    viewer_draw_cell_at(viewer, viewer->selected_cell.x, viewer->selected_cell.y, true);
+    viewer_draw_cell_at(viewer, viewer->prev_selected.x, viewer->prev_selected.y);
+    viewer_draw_cell_at(viewer, viewer->selected_cell.x, viewer->selected_cell.y);
     viewer_update_cell_preview(viewer);
     viewer_draw_status(viewer);
 }
@@ -329,6 +453,222 @@ static void viewer_exit(int exit_code)
         active_viewer->exit_code = exit_code;
     }
     matrix_presentation_request_stop();
+}
+
+static void viewer_request_quit(void)
+{
+    if (!active_viewer)
+    {
+        return;
+    }
+
+    if (active_viewer->file_modified)
+    {
+        viewer_show_error("No write since last change");
+        return;
+    }
+
+    viewer_exit(0);
+}
+
+static void viewer_exit_cb(int exit_code)
+{
+    viewer_request_quit();
+    (void)exit_code;
+}
+
+static void viewer_exit_force_cb(int exit_code)
+{
+    viewer_exit(exit_code);
+}
+
+static int viewer_save_cb(void)
+{
+    if (!active_viewer || !active_viewer->file_path)
+    {
+        viewer_show_error("no file path");
+        return -1;
+    }
+
+    char errbuf[512];
+    if (csv_writer_write_file(active_viewer->file_path,
+                              active_viewer->file,
+                              active_viewer->separator,
+                              errbuf,
+                              sizeof(errbuf)) != 0)
+    {
+        viewer_show_error(errbuf);
+        return -1;
+    }
+
+    active_viewer->file_modified = false;
+    viewer_set_status(active_viewer, "written");
+    viewer_draw_status(active_viewer);
+    return 0;
+}
+
+static paint_action_t viewer_enter_insert(csvi_viewer_t *viewer)
+{
+    if (viewer->read_only)
+    {
+        matrix_presentation_beep();
+        viewer_set_status(viewer, "File is read-only");
+        viewer_draw_status(viewer);
+        return PAINT_NONE;
+    }
+
+    csv_token *token = csv_reader_get_token(viewer->selected_cell.x, viewer->selected_cell.y, viewer->file);
+    const char *current = (token && token->data) ? token->data : "";
+
+    strncpy(viewer->edit_original, current, sizeof(viewer->edit_original) - 1);
+    viewer->edit_original[sizeof(viewer->edit_original) - 1] = '\0';
+    strncpy(viewer->edit_buffer, current, sizeof(viewer->edit_buffer) - 1);
+    viewer->edit_buffer[sizeof(viewer->edit_buffer) - 1] = '\0';
+    viewer->edit_cursor = strlen(viewer->edit_buffer);
+    viewer->edit_dirty = false;
+    viewer_clear_status(viewer);
+
+    viewer_set_edit_margin(viewer, true);
+    input_mode_set(INPUT_INSERT);
+    viewer->prev_selected = viewer->selected_cell;
+    return PAINT_FULL;
+}
+
+static paint_action_t viewer_cancel_edit(csvi_viewer_t *viewer)
+{
+    strncpy(viewer->edit_buffer, viewer->edit_original, sizeof(viewer->edit_buffer) - 1);
+    viewer->edit_buffer[sizeof(viewer->edit_buffer) - 1] = '\0';
+    viewer->edit_cursor = strlen(viewer->edit_buffer);
+    viewer->edit_dirty = false;
+
+    viewer_set_edit_margin(viewer, false);
+    input_mode_set(INPUT_NORMAL);
+    matrix_presentation_hide_cursor();
+    viewer_clear_status(viewer);
+    return PAINT_FULL;
+}
+
+static paint_action_t viewer_commit_cell(csvi_viewer_t *viewer)
+{
+    size_t col_before = viewport_cache_col_width(viewer->cache, viewer->selected_cell.x);
+    size_t row_before = viewport_cache_row_height(viewer->cache, viewer->selected_cell.y);
+
+    csv_token *token = csv_reader_get_token(viewer->selected_cell.x, viewer->selected_cell.y, viewer->file);
+    const char *previous = (token && token->data) ? token->data : "";
+    bool changed = strcmp(previous, viewer->edit_buffer) != 0;
+
+    if (csv_reader_set_cell(viewer->file, viewer->selected_cell.x, viewer->selected_cell.y, viewer->edit_buffer) != 0)
+    {
+        matrix_presentation_beep();
+        viewer_set_status(viewer, "could not update cell");
+        viewer_draw_status(viewer);
+        return PAINT_NONE;
+    }
+
+    viewport_cache_update_cell(viewer->cache, viewer->file, viewer->selected_cell.x, viewer->selected_cell.y);
+
+    if (changed)
+    {
+        viewer->file_modified = true;
+        if (viewer->search && csvi_search_pattern(viewer->search))
+        {
+            csvi_search_refresh(viewer->search);
+        }
+    }
+
+    strncpy(viewer->edit_original, viewer->edit_buffer, sizeof(viewer->edit_original) - 1);
+    viewer->edit_original[sizeof(viewer->edit_original) - 1] = '\0';
+    viewer->edit_dirty = false;
+
+    viewer_set_edit_margin(viewer, false);
+    input_mode_set(INPUT_NORMAL);
+    matrix_presentation_hide_cursor();
+    viewer_clear_status(viewer);
+
+    size_t col_after = viewport_cache_col_width(viewer->cache, viewer->selected_cell.x);
+    size_t row_after = viewport_cache_row_height(viewer->cache, viewer->selected_cell.y);
+    if (col_before != col_after || row_before != row_after)
+    {
+        return PAINT_FULL;
+    }
+
+    return PAINT_FULL;
+}
+
+static bool viewer_is_navigation_key(int key)
+{
+    switch (key)
+    {
+    case 'h':
+    case 'j':
+    case 'k':
+    case 'l':
+    case KEY_LEFT:
+    case KEY_RIGHT:
+    case KEY_UP:
+    case KEY_DOWN:
+    case KEY_HOME:
+    case KEY_END:
+    case KEY_NPAGE:
+    case KEY_PPAGE:
+    case 6:
+    case 2:
+    case 'g':
+    case 'G':
+    case 1:
+    case 5:
+    case ':':
+    case '/':
+    case '?':
+        return true;
+    default:
+        return false;
+    }
+}
+
+static paint_action_t viewer_handle_insert(csvi_viewer_t *viewer, int key)
+{
+    if (key == 27)
+    {
+        return viewer_cancel_edit(viewer);
+    }
+
+    if (key == 10 || key == KEY_ENTER)
+    {
+        return viewer_commit_cell(viewer);
+    }
+
+    if (key == KEY_BACKSPACE || key == 127)
+    {
+        viewer_edit_backspace(viewer);
+        return PAINT_CURSOR;
+    }
+
+    if (key == KEY_LEFT)
+    {
+        viewer_edit_move_cursor(viewer, -1);
+        return PAINT_CURSOR;
+    }
+
+    if (key == KEY_RIGHT)
+    {
+        viewer_edit_move_cursor(viewer, 1);
+        return PAINT_CURSOR;
+    }
+
+    if (viewer_is_navigation_key(key))
+    {
+        viewer_insert_blocks_navigation(viewer);
+        return PAINT_NONE;
+    }
+
+    if (key > 0 && key < 256 && key != 27)
+    {
+        viewer_edit_insert_char(viewer, (char)key);
+        return PAINT_CURSOR;
+    }
+
+    return PAINT_NONE;
 }
 
 static void viewer_go_to_line_cb(size_t line)
@@ -459,9 +799,10 @@ static void viewer_set_header_cb(bool enabled)
 static void viewer_show_help(void)
 {
     const char *lines[] = {
-        "Keys: arrows/hjkl move | Home/End row start/end | g/G first/last row",
-        "       Ctrl+F/B page down/up | : command | / search | ? help | q quit",
-        "Commands: :line N :col N :cell R,C :top :bottom :left :right :q",
+        "Keys: arrows/hjkl move | i/Insert edit cell | Enter commit | Esc cancel",
+        "       Home/End row start/end | g/G first/last row | Ctrl+F/B page down/up",
+        "       : command | / search | ? help | q quit",
+        "Commands: :line N :col N :cell R,C :w :wq :q :q! :top :bottom :left :right",
         "          :set sep=X :set header=on|off :n :N",
         NULL};
     int row = 2;
@@ -559,8 +900,11 @@ static paint_action_t viewer_handle_normal(csvi_viewer_t *viewer, int key)
                                &top_before,
                                &cursor_before);
     case 'q':
-        viewer_exit(0);
+        viewer_request_quit();
         return PAINT_NONE;
+    case 'i':
+    case KEY_IC:
+        return viewer_enter_insert(viewer);
     case ':':
         input_mode_set(INPUT_COMMAND);
         viewer->input_buffer[0] = '\0';
@@ -681,6 +1025,9 @@ static paint_action_t viewer_on_key(int key)
     case INPUT_SEARCH:
         action = viewer_handle_line_input(viewer, key, INPUT_SEARCH, "/", true);
         break;
+    case INPUT_INSERT:
+        action = viewer_handle_insert(viewer, key);
+        break;
     case INPUT_HELP:
         if (key == 27 || key == 'q')
         {
@@ -788,6 +1135,7 @@ int csvi_viewer_open(csvi_viewer_t *viewer, const char *path)
     }
 
     csvi_log_info("opened '%s' (%zu lines, %zu columns)\n", path, file->lines, file->columns);
+    viewer->read_only = access(path, W_OK) != 0;
     return CSVI_EXIT_OK;
 }
 
@@ -807,8 +1155,10 @@ int csvi_viewer_run(csvi_viewer_t *viewer)
         .search_prev = viewer_search_prev_cb,
         .set_separator = viewer_set_separator_cb,
         .set_header = viewer_set_header_cb,
+        .save_file = viewer_save_cb,
         .show_error = viewer_show_error,
-        .exit = viewer_exit};
+        .exit = viewer_exit_cb,
+        .exit_force = viewer_exit_force_cb};
 
     commands_init(&command_executors);
     matrix_presentation_init(&viewer->display);
@@ -862,7 +1212,38 @@ csvi_viewer_t *csvi_viewer_create_with_file(const csv_contents *file)
     }
     viewer->file = (csv_contents *)file;
     viewer->owns_file = false;
+    viewer->cache = viewport_cache_build(file);
     return viewer;
+}
+
+int csvi_viewer_test_commit_at(csvi_viewer_t *viewer, size_t x, size_t y, const char *value)
+{
+    if (!viewer || !viewer->file || !viewer->cache)
+    {
+        return -1;
+    }
+
+    csv_token *token = csv_reader_get_token(x, y, viewer->file);
+    const char *previous = (token && token->data) ? token->data : "";
+    bool changed = strcmp(previous, value ? value : "") != 0;
+
+    if (csv_reader_set_cell(viewer->file, x, y, value) != 0)
+    {
+        return -1;
+    }
+
+    viewport_cache_update_cell(viewer->cache, viewer->file, x, y);
+    if (changed)
+    {
+        viewer->file_modified = true;
+    }
+
+    return 0;
+}
+
+bool csvi_viewer_file_modified(const csvi_viewer_t *viewer)
+{
+    return viewer && viewer->file_modified;
 }
 
 const coordinates_t *csvi_viewer_selected_cell(const csvi_viewer_t *viewer)

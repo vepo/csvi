@@ -1,7 +1,7 @@
 Contributions are welcome.
 
 1. Read [AGENTS.md](./AGENTS.md) and [docs/architecture.md](./docs/architecture.md).
-2. Build and run tests: `autoreconf -ivf && ./configure && make check`.
+2. Build and run tests — see [docs/build.md](./docs/build.md).
 3. Update `docs/architecture.md` if you change module boundaries or CLI behavior.
 4. Open a pull request with a clear description and test plan.
 

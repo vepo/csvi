@@ -17,7 +17,7 @@ When adding, removing, or renaming files under `src/` or `tests/`:
 ## Verify
 
 ```bash
-autoreconf -ivf
+./bootstrap
 ./configure
 make check
 ```

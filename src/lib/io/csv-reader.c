@@ -227,6 +227,76 @@ csv_contents *csv_reader_read_file(const char *path, char *errbuf, size_t errbuf
     return contents;
 }
 
+static csv_token *csv_contents_last_token(csv_contents *contents)
+{
+    csv_token *last = contents->first;
+    if (!last)
+    {
+        return NULL;
+    }
+    while (last->next)
+    {
+        last = last->next;
+    }
+    return last;
+}
+
+int csv_reader_set_cell(csv_contents *contents, size_t x, size_t y, const char *value)
+{
+    if (!contents || x >= contents->columns || y >= contents->lines)
+    {
+        return -1;
+    }
+
+    const char *new_value = value ? value : "";
+    csv_token *token = csv_reader_get_token(x, y, contents);
+
+    if (token)
+    {
+        char *copy = strdup(new_value);
+        if (!copy)
+        {
+            return -1;
+        }
+        free(token->data);
+        token->data = copy;
+        return 0;
+    }
+
+    csv_token *new_token = calloc(1, sizeof(csv_token));
+    if (!new_token)
+    {
+        return -1;
+    }
+
+    new_token->data = strdup(new_value);
+    if (!new_token->data)
+    {
+        free(new_token);
+        return -1;
+    }
+    new_token->x = x;
+    new_token->y = y;
+    new_token->next = NULL;
+
+    if (contents->first)
+    {
+        csv_token *last = csv_contents_last_token(contents);
+        last->next = new_token;
+    }
+    else
+    {
+        contents->first = new_token;
+    }
+
+    if (contents->index)
+    {
+        contents->index[y * contents->columns + x] = new_token;
+    }
+
+    return 0;
+}
+
 csv_token *csv_reader_get_token(size_t x, size_t y, const csv_contents *contents)
 {
     if (!contents || x >= contents->columns || y >= contents->lines)

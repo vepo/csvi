@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install dependencies
+        run: bash .github/scripts/install-deps.sh build
+
+      - name: Bootstrap, build, and test
+        run: |
+          ./bootstrap
+          ./configure --enable-debug
+          make -j"$(nproc)"
+          make check VERBOSE=1
+
+  sonar:
+    name: SonarCloud
+    runs-on: ubuntu-24.04
+    needs: test
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: bash .github/scripts/install-deps.sh build
+
+      - name: Bootstrap and configure (coverage)
+        run: |
+          ./bootstrap
+          ./configure --enable-coverage
+
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+
+      - name: Build and test with coverage
+        run: |
+          build-wrapper-linux-x86-64 --out-dir "${{ env.BUILD_WRAPPER_OUT_DIR }}" make clean
+          build-wrapper-linux-x86-64 --out-dir "${{ env.BUILD_WRAPPER_OUT_DIR }}" make -j"$(nproc)" check
+          bash .github/scripts/generate-gcov-reports.sh
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            --define "sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
+
+  dist:
+    name: Source distribution
+    runs-on: ubuntu-24.04
+    needs: test
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install dependencies
+        run: bash .github/scripts/install-deps.sh build
+
+      - name: distcheck
+        run: |
+          ./bootstrap
+          ./configure
+          make distcheck
+
+      - name: Upload source tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-tarball
+          path: csv-viewer-*.tar.gz
+          if-no-files-found: error
+
+  packages:
+    name: Linux packages
+    runs-on: ubuntu-24.04
+    needs: dist
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install dependencies
+        run: bash .github/scripts/install-deps.sh package
+
+      - name: Resolve package version
+        id: version
+        run: |
+          version="$(sed -n 's/^AC_INIT(\[[^]]*\], \[\([^]]*\)\].*/\1/p' configure.ac)"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build .deb, .rpm, and .apk
+        env:
+          NFPM_VERSION: ${{ steps.version.outputs.value }}
+        run: bash packaging/build-packages.sh deb rpm apk
+
+      - name: Build shell installer
+        run: bash build-installer
+
+      - name: Upload binary packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            packaging/dist/*
+            installer
+          if-no-files-found: error
+
+  release:
+    name: GitHub Release
+    runs-on: ubuntu-24.04
+    needs: [dist, packages]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          version="${tag#v}"
+          shopt -s nullglob
+          files=(
+            artifacts/source-tarball/csv-viewer-"${version}".tar.gz
+            artifacts/linux-packages/*
+          )
+          if [ "${#files[@]}" -eq 0 ]; then
+            files=(artifacts/source-tarball/*.tar.gz artifacts/linux-packages/*)
+          fi
+          gh release create "$tag" \
+            --title "csvi ${version}" \
+            --generate-notes \
+            "${files[@]}"

@@ -160,3 +160,21 @@ const char *csvi_search_pattern(const csvi_search_t *search)
 {
     return search ? search->pattern : NULL;
 }
+
+void csvi_search_refresh(csvi_search_t *search)
+{
+    if (!search || !search->pattern || search->pattern[0] == '\0')
+    {
+        return;
+    }
+
+    const char *pattern = search->pattern;
+    char *saved = strdup(pattern);
+    if (!saved)
+    {
+        return;
+    }
+
+    csvi_search_find(search, saved);
+    free(saved);
+}

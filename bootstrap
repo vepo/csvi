@@ -1,0 +1,4 @@
+#!/bin/sh
+# Regenerate the Autotools build system (configure, Makefile.in, etc.).
+set -eu
+autoreconf -ivf

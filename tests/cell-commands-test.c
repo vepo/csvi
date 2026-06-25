@@ -13,6 +13,9 @@ static int counter_last_line;
 static int counter_first_col;
 static int counter_last_col;
 static int counter_error;
+static int counter_save;
+static int counter_exit_force;
+static int last_save_result;
 static int last_line;
 static int last_col;
 static char last_error[256];
@@ -28,6 +31,9 @@ static void reset_counters(void)
     counter_first_col = 0;
     counter_last_col = 0;
     counter_error = 0;
+    counter_save = 0;
+    counter_exit_force = 0;
+    last_save_result = 0;
     last_line = -1;
     last_col = -1;
     last_error[0] = '\0';
@@ -69,6 +75,18 @@ static void mock_error(char *msg)
     strncpy(last_error, msg, sizeof(last_error) - 1);
 }
 
+static int mock_save(void)
+{
+    counter_save++;
+    return last_save_result;
+}
+
+static void mock_exit_force(int code)
+{
+    (void)code;
+    counter_exit_force++;
+}
+
 static command_executors_t mock_executors(void)
 {
     command_executors_t executors = {
@@ -79,8 +97,10 @@ static command_executors_t mock_executors(void)
         .go_to_last_line = mock_last_line,
         .go_to_first_column = mock_first_col,
         .go_to_last_column = mock_last_col,
+        .save_file = mock_save,
         .show_error = mock_error,
-        .exit = mock_exit};
+        .exit = mock_exit,
+        .exit_force = mock_exit_force};
     return executors;
 }
 
@@ -156,6 +176,54 @@ START_TEST(test_cell_command_invalid)
 }
 END_TEST
 
+START_TEST(test_cell_command_write)
+{
+    reset_counters();
+    command_executors_t executors = mock_executors();
+    commands_init(&executors);
+    commands_execute(":w");
+    ck_assert_int_eq(counter_save, 1);
+    commands_shutdown();
+}
+END_TEST
+
+START_TEST(test_cell_command_wq)
+{
+    reset_counters();
+    last_save_result = 0;
+    command_executors_t executors = mock_executors();
+    commands_init(&executors);
+    commands_execute(":wq");
+    ck_assert_int_eq(counter_save, 1);
+    ck_assert_int_eq(counter_exit, 1);
+    commands_shutdown();
+}
+END_TEST
+
+START_TEST(test_cell_command_wq_save_fail)
+{
+    reset_counters();
+    last_save_result = -1;
+    command_executors_t executors = mock_executors();
+    commands_init(&executors);
+    commands_execute(":wq");
+    ck_assert_int_eq(counter_save, 1);
+    ck_assert_int_eq(counter_exit, 0);
+    commands_shutdown();
+}
+END_TEST
+
+START_TEST(test_cell_command_quit_force)
+{
+    reset_counters();
+    command_executors_t executors = mock_executors();
+    commands_init(&executors);
+    commands_execute(":q!");
+    ck_assert_int_eq(counter_exit_force, 1);
+    commands_shutdown();
+}
+END_TEST
+
 Suite *cell_commands_suite(void)
 {
     Suite *s = suite_create("cell_commands");
@@ -166,6 +234,10 @@ Suite *cell_commands_suite(void)
     tcase_add_test(tc, test_cell_command_cell);
     tcase_add_test(tc, test_cell_command_top_bottom);
     tcase_add_test(tc, test_cell_command_invalid);
+    tcase_add_test(tc, test_cell_command_write);
+    tcase_add_test(tc, test_cell_command_wq);
+    tcase_add_test(tc, test_cell_command_wq_save_fail);
+    tcase_add_test(tc, test_cell_command_quit_force);
     suite_add_tcase(s, tc);
     return s;
 }
